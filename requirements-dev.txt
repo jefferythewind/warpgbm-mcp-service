@@ -1,0 +1,19 @@
+-r requirements.txt
+
+# Development
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0
+black>=23.0.0
+ruff>=0.1.0
+mypy>=1.7.0
+
+# Modal deployment
+modal>=0.63.0
+
+# Cloudflare tunnel (optional, system install recommended)
+# cloudflared
+
+
+
+

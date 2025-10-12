@@ -1,0 +1,176 @@
+{
+  "name": "warpgbm-mcp",
+  "version": "1.0.0",
+  "description": "Multi-model gradient boosting service supporting WarpGBM (GPU-accelerated with era-aware splitting) and LightGBM. Train models and get portable artifacts for inference.",
+  "author": "jefferythewind",
+  "homepage": "https://github.com/jefferythewind/warpgbm",
+  "models": [
+    {
+      "id": "warpgbm",
+      "name": "WarpGBM",
+      "description": "GPU-accelerated GBDT with era-aware splitting for temporal data",
+      "acceleration": "GPU"
+    },
+    {
+      "id": "lightgbm",
+      "name": "LightGBM",
+      "description": "Microsoft's fast, distributed gradient boosting",
+      "acceleration": "CPU"
+    }
+  ],
+  "capabilities": {
+    "list_models": {
+      "description": "List all available model backends",
+      "endpoint": "/models",
+      "method": "GET",
+      "returns": {
+        "models": "Array of model identifiers",
+        "default": "Default model type"
+      }
+    },
+    "train": {
+      "description": "Train a gradient boosting model on provided data and return serialized model artifact",
+      "endpoint": "/train",
+      "method": "POST",
+      "parameters": {
+        "X": {
+          "type": "array",
+          "description": "Feature matrix (2D array of floats)",
+          "required": true
+        },
+        "y": {
+          "type": "array",
+          "description": "Target labels (1D array of integers)",
+          "required": true
+        },
+        "model_type": {
+          "type": "string",
+          "enum": ["warpgbm", "lightgbm"],
+          "default": "warpgbm",
+          "description": "Model backend to use"
+        },
+        "objective": {
+          "type": "string",
+          "enum": ["regression", "binary", "multiclass"],
+          "default": "multiclass",
+          "description": "Training objective"
+        },
+        "num_class": {
+          "type": "integer",
+          "description": "Number of classes (required for multiclass)"
+        },
+        "max_depth": {
+          "type": "integer",
+          "default": 6,
+          "description": "Maximum tree depth"
+        },
+        "num_trees": {
+          "type": "integer",
+          "default": 100,
+          "description": "Number of boosting rounds"
+        },
+        "learning_rate": {
+          "type": "number",
+          "default": 0.1,
+          "description": "Learning rate"
+        },
+        "note": "See /models endpoint and MODEL_SUPPORT.md for model-specific parameters"
+      },
+      "returns": {
+        "model_type": "Model backend used",
+        "model_artifact_joblib": "Base64-encoded joblib model (CPU-compatible)",
+        "model_artifact_onnx": "Base64-encoded ONNX model (optional)",
+        "training_time_seconds": "Training duration"
+      },
+      "pricing": {
+        "amount": 0.01,
+        "currency": "USD",
+        "per": "request"
+      }
+    },
+    "predict_from_artifact": {
+      "description": "Run inference using a serialized model artifact",
+      "endpoint": "/predict_from_artifact",
+      "method": "POST",
+      "parameters": {
+        "model_artifact": {
+          "type": "string",
+          "description": "Base64-encoded model artifact (from /train)",
+          "required": true
+        },
+        "X": {
+          "type": "array",
+          "description": "Feature matrix for inference",
+          "required": true
+        },
+        "format": {
+          "type": "string",
+          "enum": ["joblib", "onnx"],
+          "default": "joblib",
+          "description": "Model format"
+        }
+      },
+      "returns": {
+        "predictions": "Array of predictions",
+        "inference_time_seconds": "Inference duration"
+      },
+      "pricing": {
+        "amount": 0.001,
+        "currency": "USD",
+        "per": "request"
+      }
+    },
+    "predict_proba_from_artifact": {
+      "description": "Run probability inference for classification models",
+      "endpoint": "/predict_proba_from_artifact",
+      "method": "POST",
+      "parameters": {
+        "model_artifact": {
+          "type": "string",
+          "description": "Base64-encoded model artifact",
+          "required": true
+        },
+        "X": {
+          "type": "array",
+          "description": "Feature matrix for inference",
+          "required": true
+        },
+        "format": {
+          "type": "string",
+          "enum": ["joblib", "onnx"],
+          "default": "joblib"
+        }
+      },
+      "returns": {
+        "probabilities": "2D array of class probabilities",
+        "inference_time_seconds": "Inference duration"
+      },
+      "pricing": {
+        "amount": 0.001,
+        "currency": "USD",
+        "per": "request"
+      }
+    }
+  },
+  "authentication": {
+    "type": "bearer",
+    "description": "Optional X402 payment token or API key",
+    "header": "Authorization"
+  },
+  "rate_limits": {
+    "train": "10 requests/minute",
+    "predict": "50 requests/minute"
+  },
+  "transports": {
+    "sse": {
+      "url": "/mcp/sse",
+      "description": "Server-Sent Events endpoint for MCP protocol"
+    },
+    "http": {
+      "url": "/",
+      "description": "REST API endpoints"
+    }
+  },
+  "entrypoint": "https://mcp.warpgbm.ai"
+}
+

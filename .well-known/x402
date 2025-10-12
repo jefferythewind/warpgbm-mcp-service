@@ -1,0 +1,41 @@
+{
+  "name": "WarpGBM MCP Service",
+  "version": "1.0.0",
+  "description": "Pay-per-use GPU-accelerated gradient boosting",
+  "currency": "USDC",
+  "network": "Base",
+  "wallet_address": "SET_VIA_ENV_X402_WALLET_ADDRESS",
+  "pricing": {
+    "train": {
+      "amount": 0.01,
+      "unit": "USDC",
+      "per": "request",
+      "description": "Train model and return artifact"
+    },
+    "predict_from_artifact": {
+      "amount": 0.001,
+      "unit": "USDC",
+      "per": "request",
+      "description": "Run inference with provided model"
+    },
+    "predict_proba_from_artifact": {
+      "amount": 0.001,
+      "unit": "USDC",
+      "per": "request",
+      "description": "Run probability inference"
+    }
+  },
+  "payment_methods": [
+    "crypto",
+    "stripe",
+    "api_key"
+  ],
+  "verification_endpoint": "/x402/verify",
+  "status_endpoint": "/x402/status",
+  "callback_url": "https://mcp.warpgbm.ai/x402/verify",
+  "notes": "Payment currently optional for testing. Will be enforced in production."
+}
+
+
+
+
