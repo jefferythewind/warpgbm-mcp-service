@@ -2,12 +2,22 @@
 
 ## 🎯 What is This Service?
 
-WarpGBM MCP is a **multi-model gradient boosting training and inference service** that provides:
+**Outsource your GBDT workload to the world's fastest GPU implementation.**
 
-- **WarpGBM**: GPU-accelerated gradient boosting with era-aware splitting (ideal for temporal/time-series data)
-- **LightGBM**: Microsoft's fast, distributed gradient boosting framework
+WarpGBM MCP is a **cloud GPU gradient boosting service** that gives AI agents instant access to GPU-accelerated training. Train models on our A10G GPUs, receive portable artifacts, and cache them for millisecond inference. No GPU required on your end.
 
-The service returns **portable model artifacts** (joblib format) that can be reused for inference without keeping models in memory.
+### 🏗️ How It Works
+
+1. **Train**: POST your data → Train on our A10G GPUs → Get portable model artifact
+2. **Cache**: `artifact_id` cached for 5 minutes → Blazing fast predictions
+3. **Inference**: Online (via cache) or offline (download artifact for local use)
+
+**Architecture**: Stateless service. No model storage. You own your artifacts. Use them in production, locally, or via our caching layer for fast online serving.
+
+### Available Models
+
+- **WarpGBM**: GPU-accelerated, 13× faster than LightGBM, custom CUDA kernels, invariant learning
+- **LightGBM**: CPU-optimized, Microsoft's distributed gradient boosting, battle-tested
 
 ---
 
@@ -211,25 +221,71 @@ See [WARPGBM_PYTHON_GUIDE.md](./WARPGBM_PYTHON_GUIDE.md) for complete Python pac
 // Response: {"predictions": [0, 1]}
 ```
 
+### Example 5: Iris Dataset (Proper Sample Size)
+
+⚠️ **Important**: WarpGBM uses quantile binning which requires **60+ samples** (not 20!) for robust training. With insufficient data, the model can't learn proper decision boundaries.
+
+```json
+// Train on Iris with 60 samples (3× the base 20)
+{
+  "X": [[5.1,3.5,1.4,0.2], [4.9,3,1.4,0.2], [4.7,3.2,1.3,0.2], [4.6,3.1,1.5,0.2], [5,3.6,1.4,0.2],
+        [7,3.2,4.7,1.4], [6.4,3.2,4.5,1.5], [6.9,3.1,4.9,1.5], [5.5,2.3,4,1.3], [6.5,2.8,4.6,1.5],
+        [6.3,3.3,6,2.5], [5.8,2.7,5.1,1.9], [7.1,3,5.9,2.1], [6.3,2.9,5.6,1.8], [6.5,3,5.8,2.2],
+        [7.6,3,6.6,2.1], [4.9,2.5,4.5,1.7], [7.3,2.9,6.3,1.8], [6.7,2.5,5.8,1.8], [7.2,3.6,6.1,2.5],
+        [5.1,3.5,1.4,0.2], [4.9,3,1.4,0.2], [4.7,3.2,1.3,0.2], [4.6,3.1,1.5,0.2], [5,3.6,1.4,0.2],
+        [7,3.2,4.7,1.4], [6.4,3.2,4.5,1.5], [6.9,3.1,4.9,1.5], [5.5,2.3,4,1.3], [6.5,2.8,4.6,1.5],
+        [6.3,3.3,6,2.5], [5.8,2.7,5.1,1.9], [7.1,3,5.9,2.1], [6.3,2.9,5.6,1.8], [6.5,3,5.8,2.2],
+        [7.6,3,6.6,2.1], [4.9,2.5,4.5,1.7], [7.3,2.9,6.3,1.8], [6.7,2.5,5.8,1.8], [7.2,3.6,6.1,2.5],
+        [5.1,3.5,1.4,0.2], [4.9,3,1.4,0.2], [4.7,3.2,1.3,0.2], [4.6,3.1,1.5,0.2], [5,3.6,1.4,0.2],
+        [7,3.2,4.7,1.4], [6.4,3.2,4.5,1.5], [6.9,3.1,4.9,1.5], [5.5,2.3,4,1.3], [6.5,2.8,4.6,1.5],
+        [6.3,3.3,6,2.5], [5.8,2.7,5.1,1.9], [7.1,3,5.9,2.1], [6.3,2.9,5.6,1.8], [6.5,3,5.8,2.2],
+        [7.6,3,6.6,2.1], [4.9,2.5,4.5,1.7], [7.3,2.9,6.3,1.8], [6.7,2.5,5.8,1.8], [7.2,3.6,6.1,2.5]],
+  "y": [0,0,0,0,0, 1,1,1,1,1, 2,2,2,2,2,2,2,2,2,2,
+        0,0,0,0,0, 1,1,1,1,1, 2,2,2,2,2,2,2,2,2,2,
+        0,0,0,0,0, 1,1,1,1,1, 2,2,2,2,2,2,2,2,2,2],
+  "model_type": "warpgbm",
+  "objective": "multiclass",
+  "n_estimators": 100
+}
+
+// Response includes artifact_id for smart caching
+{
+  "artifact_id": "abc123-def456-...",
+  "model_artifact_joblib": "H4sIA...",
+  "training_time_seconds": 0.0
+}
+
+// Fast inference with cached artifact_id (< 100ms)
+{
+  "artifact_id": "abc123-def456-...",
+  "X": [[5,3.4,1.5,0.2], [6.7,3.1,4.4,1.4], [7.7,3.8,6.7,2.2]]
+}
+
+// Predictions: [0, 1, 2] ← Perfect classification!
+```
+
 ---
 
 ## 🚀 Best Practices
 
 ### For Users (Humans)
-1. **Start with small datasets** to test (< 1000 rows)
+1. **Use sufficient training data**: WarpGBM needs **60+ samples** for proper binning (20 samples = poor results!)
 2. **Use LightGBM** for general-purpose tasks (it's fast and reliable)
-3. **Save the model artifact** from training to reuse for predictions
-4. **Match the objective** to your task (regression vs classification)
+3. **Save the artifact_id** for fast cached predictions (5min TTL, < 100ms inference)
+4. **Download the model_artifact_joblib** for offline/production use
+5. **Match the objective** to your task (regression vs classification)
 
 ### For Agents (AI)
 1. **Always validate input shapes** before calling `train`
-2. **Store model artifacts** from training responses for later use
-3. **Handle errors gracefully** - parse the error message for actionable feedback
-4. **Choose the right objective**:
+2. **Use artifact_id for repeated predictions** - it's cached for 5 minutes and much faster
+3. **Store model artifacts** from training responses for long-term use
+4. **Handle errors gracefully** - parse the error message for actionable feedback
+5. **Choose the right objective**:
    - Continuous output → `"regression"`
    - Two classes → `"binary"`
    - 3+ classes → `"multiclass"`
-5. **Start with defaults** (100 trees, 0.1 learning rate, depth 6)
+6. **Ensure sufficient data**: Minimum 60+ samples for WarpGBM, 20+ for LightGBM
+7. **Start with defaults** (100 trees, 0.1 learning rate, depth 6)
 
 ---
 

@@ -45,14 +45,15 @@ def deserialize_model_joblib(artifact_b64: str) -> Any:
     """
     Deserialize a base64-encoded, gzip-compressed joblib model.
     
+    WARNING: This should ONLY be used for CPU models (LightGBM).
+    WarpGBM models must be loaded with GPU-specific deserializers!
+    
     Args:
         artifact_b64: Base64-encoded, gzip-compressed model string
         
     Returns:
         Deserialized model object
     """
-    import torch
-    
     # Decode base64
     compressed_bytes = base64.b64decode(artifact_b64)
     
@@ -61,18 +62,7 @@ def deserialize_model_joblib(artifact_b64: str) -> Any:
     
     # Load from bytes
     buf = io.BytesIO(model_bytes)
-    
-    # Monkey-patch torch.load to always use CPU during deserialization
-    original_load = torch.load
-    def cpu_load(*args, **kwargs):
-        kwargs['map_location'] = 'cpu'
-        return original_load(*args, **kwargs)
-    
-    torch.load = cpu_load
-    try:
-        model = joblib.load(buf)
-    finally:
-        torch.load = original_load
+    model = joblib.load(buf)
     
     return model
 

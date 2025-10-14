@@ -1,14 +1,28 @@
 # WarpGBM MCP Service
 
-> Multi-model gradient boosting as a stateless MCP + X402 service
+> Cloud GPU gradient boosting service with portable artifacts and smart caching
 
 🌐 **Production Service**: https://warpgbm.ai  
 📡 **MCP Endpoint**: https://warpgbm.ai/mcp/sse  
 📖 **API Documentation**: https://warpgbm.ai/docs
 
-## 🔗 About WarpGBM
+## ⚡ What is This?
 
-**This is a cloud API service wrapper around the [WarpGBM Python package](https://github.com/jefferythewind/warpgbm).**
+**Outsource your GBDT workload to the world's fastest GPU implementation.**
+
+WarpGBM MCP is a cloud service that gives AI agents instant access to [WarpGBM's](https://github.com/jefferythewind/warpgbm) GPU-accelerated training. Train models on our A10G GPUs, receive portable artifacts, and cache them for millisecond inference. No GPU required on your end.
+
+### 🏗️ How It Works
+
+1. **Train**: POST your data → Train on our A10G GPUs → Get portable model artifact
+2. **Cache**: `artifact_id` cached for 5 minutes → Blazing fast predictions
+3. **Inference**: Online (via cache) or offline (download artifact for local use)
+
+**Architecture**: Stateless service. No model storage. You own your artifacts. Use them in production, locally, or via our caching layer for fast online serving.
+
+## 🔗 About the WarpGBM Python Package
+
+**This MCP service is built on the [WarpGBM Python package](https://github.com/jefferythewind/warpgbm).**
 
 ### 🐍 WarpGBM Python Package (Recommended for Production)
 
@@ -35,22 +49,20 @@ For production ML workflows, use **WarpGBM directly**:
 
 ---
 
-## 🎯 MCP Service Overview
-
-WarpGBM-MCP is a **universal gradient boosting service** that exposes multiple GBDT backends through a unified Model Context Protocol (MCP) interface. AI agents and developers can choose the best model for their task and get portable artifacts for inference.
+## 🎯 MCP Service Features
 
 **Available Models:**
-- 🚀 **[WarpGBM](https://github.com/jefferythewind/warpgbm)** - GPU-accelerated GBDT with era-aware splitting
-- ⚡ **LightGBM** - Microsoft's fast, distributed gradient boosting
+- 🚀 **[WarpGBM](https://github.com/jefferythewind/warpgbm)** - 13× faster than LightGBM. Custom CUDA kernels. Invariant learning.
+- ⚡ **LightGBM** - Microsoft's distributed gradient boosting. Battle-tested.
 
 **Key Features:**
-- 🧩 **Multi-Model**: Choose between WarpGBM, LightGBM, and more
-- 🚀 **Stateless**: Train → return portable model artifact → no session management
-- 💰 **Monetized**: X402 micropayment support for pay-per-use
-- 🔒 **Secure**: Sandboxed execution, no filesystem access
-- 🌐 **Discoverable**: MCP manifest for automatic agent discovery
-- ⚡ **Fast**: GPU-accelerated (WarpGBM) or CPU-optimized (LightGBM)
-- 🔁 **Portable**: Returns CPU-compatible models (joblib/ONNX)
+- 🧩 **Multi-Model**: Choose between WarpGBM (GPU) and LightGBM (CPU)
+- 🚀 **Artifact-Based**: Train → Get portable artifact → Use anywhere
+- ⚡ **Smart Caching**: `artifact_id` → 5min TTL → Sub-100ms inference
+- 💰 **Pay-per-use**: X402 micropayment support (optional)
+- 🤖 **MCP Native**: Direct tool integration for AI agents
+- 🔁 **Portable Artifacts**: Download and use locally or in production
+- 🌐 **Stateless**: No model storage. You own your artifacts.
 - 🔌 **Extensible**: Easy to add new model backends
 
 ## 🏗️ Architecture
@@ -204,6 +216,55 @@ Response:
   "probabilities": [[0.1, 0.7, 0.2]]
 }
 ```
+
+## 🎯 Complete Example: Iris Dataset
+
+Train a multiclass classifier on Iris dataset (**Note**: Use 60+ samples for proper binning with WarpGBM):
+
+```bash
+# 1. Train WarpGBM model (60 samples - 3× the base 20)
+curl -X POST https://warpgbm.ai/train \
+  -H "Content-Type: application/json" \
+  -d '{
+  "X": [[5.1,3.5,1.4,0.2], [4.9,3,1.4,0.2], [4.7,3.2,1.3,0.2], [4.6,3.1,1.5,0.2], [5,3.6,1.4,0.2],
+        [7,3.2,4.7,1.4], [6.4,3.2,4.5,1.5], [6.9,3.1,4.9,1.5], [5.5,2.3,4,1.3], [6.5,2.8,4.6,1.5],
+        [6.3,3.3,6,2.5], [5.8,2.7,5.1,1.9], [7.1,3,5.9,2.1], [6.3,2.9,5.6,1.8], [6.5,3,5.8,2.2],
+        [7.6,3,6.6,2.1], [4.9,2.5,4.5,1.7], [7.3,2.9,6.3,1.8], [6.7,2.5,5.8,1.8], [7.2,3.6,6.1,2.5],
+        [5.1,3.5,1.4,0.2], [4.9,3,1.4,0.2], [4.7,3.2,1.3,0.2], [4.6,3.1,1.5,0.2], [5,3.6,1.4,0.2],
+        [7,3.2,4.7,1.4], [6.4,3.2,4.5,1.5], [6.9,3.1,4.9,1.5], [5.5,2.3,4,1.3], [6.5,2.8,4.6,1.5],
+        [6.3,3.3,6,2.5], [5.8,2.7,5.1,1.9], [7.1,3,5.9,2.1], [6.3,2.9,5.6,1.8], [6.5,3,5.8,2.2],
+        [7.6,3,6.6,2.1], [4.9,2.5,4.5,1.7], [7.3,2.9,6.3,1.8], [6.7,2.5,5.8,1.8], [7.2,3.6,6.1,2.5],
+        [5.1,3.5,1.4,0.2], [4.9,3,1.4,0.2], [4.7,3.2,1.3,0.2], [4.6,3.1,1.5,0.2], [5,3.6,1.4,0.2],
+        [7,3.2,4.7,1.4], [6.4,3.2,4.5,1.5], [6.9,3.1,4.9,1.5], [5.5,2.3,4,1.3], [6.5,2.8,4.6,1.5],
+        [6.3,3.3,6,2.5], [5.8,2.7,5.1,1.9], [7.1,3,5.9,2.1], [6.3,2.9,5.6,1.8], [6.5,3,5.8,2.2],
+        [7.6,3,6.6,2.1], [4.9,2.5,4.5,1.7], [7.3,2.9,6.3,1.8], [6.7,2.5,5.8,1.8], [7.2,3.6,6.1,2.5]],
+  "y": [0,0,0,0,0, 1,1,1,1,1, 2,2,2,2,2,2,2,2,2,2,
+        0,0,0,0,0, 1,1,1,1,1, 2,2,2,2,2,2,2,2,2,2,
+        0,0,0,0,0, 1,1,1,1,1, 2,2,2,2,2,2,2,2,2,2],
+  "model_type": "warpgbm",
+  "objective": "multiclass",
+  "n_estimators": 100
+}'
+
+# Response:
+{
+  "artifact_id": "abc123-def456-...",
+  "model_artifact_joblib": "H4sIA...",
+  "training_time_seconds": 0.0
+}
+
+# 2. Fast inference using cached artifact_id (< 100ms)
+curl -X POST https://warpgbm.ai/predict_from_artifact \
+  -H "Content-Type: application/json" \
+  -d '{
+  "artifact_id": "abc123-def456-...",
+  "X": [[5,3.4,1.5,0.2], [6.7,3.1,4.4,1.4], [7.7,3.8,6.7,2.2]]
+}'
+
+# Predictions: [0, 1, 2] ← Perfect classification!
+```
+
+**Why 60 samples?** WarpGBM uses quantile binning which needs sufficient data per class. With only 20 samples (~6-7 per class), the model can't learn proper decision boundaries. **Always use 60+ samples for robust training.**
 
 ### Health Check
 

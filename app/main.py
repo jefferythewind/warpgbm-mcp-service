@@ -113,13 +113,13 @@ async def root(request: Request):
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>WarpGBM MCP Service</title>
+            <title>WarpGBM MCP - Cloud GPU Gradient Boosting</title>
             <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: #333;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Monaco', monospace;
+                    background: #0a0e27;
+                    color: #e0e0e0;
                     line-height: 1.6;
                 }
                 .container {
@@ -127,12 +127,21 @@ async def root(request: Request):
                     margin: 0 auto;
                     padding: 2rem;
                 }
-                header {
-                    background: white;
-                    padding: 2rem;
-                    border-radius: 12px;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                .hero {
+                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                    padding: 0;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
                     margin-bottom: 2rem;
+                }
+                .hero-banner {
+                    width: 100%;
+                    height: auto;
+                    display: block;
+                }
+                .hero-content {
+                    padding: 2rem;
                     text-align: center;
                 }
                 h1 {
@@ -142,11 +151,52 @@ async def root(request: Request):
                     -webkit-text-fill-color: transparent;
                     background-clip: text;
                     margin-bottom: 1rem;
+                    font-weight: 800;
+                    letter-spacing: -1px;
                 }
-                .subtitle {
-                    font-size: 1.25rem;
-                    color: #666;
+                .tagline {
+                    font-size: 1.3rem;
+                    color: #a0a0d0;
+                    margin-bottom: 1rem;
+                    font-weight: 300;
+                }
+                .hero-desc {
+                    font-size: 1.1rem;
+                    color: #b0b0c0;
                     margin-bottom: 2rem;
+                    line-height: 1.8;
+                }
+                .hero-highlight {
+                    background: rgba(102, 126, 234, 0.1);
+                    border-left: 4px solid #667eea;
+                    padding: 1rem;
+                    border-radius: 8px;
+                    margin: 1.5rem 0;
+                }
+                .buttons {
+                    display: flex;
+                    gap: 1rem;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                }
+                .button {
+                    padding: 0.75rem 1.5rem;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    font-weight: 600;
+                    transition: all 0.2s;
+                    border: 2px solid transparent;
+                }
+                .button:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+                }
+                .button.secondary {
+                    background: transparent;
+                    border: 2px solid #667eea;
+                    color: #667eea;
                 }
                 .grid {
                     display: grid;
@@ -155,68 +205,50 @@ async def root(request: Request):
                     margin-bottom: 2rem;
                 }
                 .card {
-                    background: white;
+                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
                     padding: 2rem;
                     border-radius: 12px;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                    transition: transform 0.2s, box-shadow 0.2s;
+                    border: 1px solid rgba(102, 126, 234, 0.2);
+                    transition: all 0.3s;
                 }
                 .card:hover {
                     transform: translateY(-4px);
-                    box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+                    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+                    border-color: #667eea;
                 }
                 .card h2 {
                     color: #667eea;
                     margin-bottom: 1rem;
                     font-size: 1.5rem;
                 }
-                .card p {
-                    color: #666;
-                    margin-bottom: 1rem;
+                .card p, .card li {
+                    color: #b0b0c0;
                 }
                 .card ul {
                     list-style: none;
-                    padding-left: 0;
+                    padding: 0;
                 }
                 .card li {
                     padding: 0.5rem 0;
-                    border-bottom: 1px solid #f0f0f0;
+                    border-bottom: 1px solid rgba(102, 126, 234, 0.1);
                 }
-                .card li:last-child {
-                    border-bottom: none;
-                }
-                a {
-                    color: #667eea;
-                    text-decoration: none;
-                    font-weight: 500;
-                }
-                a:hover {
-                    text-decoration: underline;
-                }
-                .button {
-                    display: inline-block;
-                    padding: 0.75rem 1.5rem;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    border-radius: 8px;
-                    text-decoration: none;
-                    font-weight: 600;
-                    transition: opacity 0.2s;
-                    margin-right: 1rem;
-                }
-                .button:hover {
-                    opacity: 0.9;
-                    text-decoration: none;
-                }
+                .card li:last-child { border-bottom: none; }
+                a { color: #667eea; text-decoration: none; font-weight: 500; }
+                a:hover { text-decoration: underline; }
                 .code {
-                    background: #f6f8fa;
-                    padding: 1rem;
-                    border-radius: 6px;
-                    font-family: 'Courier New', monospace;
+                    background: #0a0e27;
+                    padding: 1.5rem;
+                    border-radius: 8px;
+                    font-family: 'Monaco', 'Courier New', monospace;
                     font-size: 0.9rem;
                     overflow-x: auto;
-                    margin: 1rem 0;
+                    border: 1px solid rgba(102, 126, 234, 0.2);
+                    color: #e0e0e0;
+                    line-height: 1.8;
                 }
+                .code .keyword { color: #ff79c6; }
+                .code .string { color: #50fa7b; }
+                .code .number { color: #bd93f9; }
                 .badge {
                     display: inline-block;
                     padding: 0.25rem 0.75rem;
@@ -227,139 +259,135 @@ async def root(request: Request):
                     font-weight: 600;
                     margin-right: 0.5rem;
                 }
-                .badge.gpu {
-                    background: #48bb78;
-                }
-                .badge.cpu {
-                    background: #4299e1;
-                }
+                .badge.gpu { background: #48bb78; }
+                .badge.cpu { background: #4299e1; }
                 footer {
                     text-align: center;
-                    color: white;
-                    padding: 2rem;
-                    margin-top: 2rem;
+                    color: #a0a0d0;
+                    padding: 3rem 0;
+                    border-top: 1px solid rgba(102, 126, 234, 0.1);
+                    margin-top: 3rem;
                 }
             </style>
         </head>
         <body>
             <div class="container">
-                <header>
-                    <h1>🚀 WarpGBM MCP</h1>
-                    <p class="subtitle">GPU-Accelerated Gradient Boosting as a Universal MCP Service</p>
-                    <p style="margin: 1rem 0; padding: 1rem; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
-                        <strong>💡 Looking for the Python package?</strong><br>
-                        This is a cloud API service. For production ML workflows, use the 
-                        <a href="https://github.com/jefferythewind/warpgbm" target="_blank" style="color: #667eea; font-weight: 600;">WarpGBM Python package</a> 
-                        directly (91+ ⭐, free GPU on your hardware)
-                    </p>
-                    <div>
-                        <a href="/docs" class="button">📚 API Docs</a>
-                        <a href="/guide" class="button">📖 Usage Guide</a>
-                        <a href="/.well-known/mcp.json" class="button">🔧 MCP Manifest</a>
+                <div class="hero">
+                    <img src="https://github.com/user-attachments/assets/dee9de16-091b-49c1-a8fa-2b4ab6891184" alt="WarpGBM" class="hero-banner">
+                    <div class="hero-content">
+                        <h1>⚡ WarpGBM MCP</h1>
+                        <p class="tagline">Neural-speed gradient boosting. GPU-native. MCP-ready.</p>
+                        <p class="hero-desc">
+                            Outsource your GBDT workload to the <strong>world's fastest GPU implementation</strong>.<br>
+                            Train on A10G GPUs • Get portable artifacts • Cache for blazing online inference
+                        </p>
+                        <div class="hero-highlight">
+                            <strong>🎯 What is this?</strong> A cloud MCP service that gives AI agents instant access to WarpGBM's GPU-accelerated training. 
+                            Train models, receive portable artifacts, cache them for millisecond inference. No GPU required on your end.
+                        </div>
+                        <div class="buttons">
+                            <a href="/docs" class="button">📚 API Docs</a>
+                            <a href="/guide" class="button">📖 MCP Guide</a>
+                            <a href="https://github.com/jefferythewind/warpgbm" class="button secondary" target="_blank">⭐ GitHub (91 stars)</a>
+                        </div>
                     </div>
-                </header>
+                </div>
 
                 <div class="grid">
                     <div class="card">
-                        <h2>🤖 For AI Agents</h2>
-                        <p>Connect via MCP protocol for seamless ML integration:</p>
-                        <ul>
-                            <li><strong>MCP SSE Endpoint:</strong> <code>/mcp/sse</code></li>
-                            <li><strong>Manifest:</strong> <a href="/.well-known/mcp.json">/.well-known/mcp.json</a></li>
-                            <li><strong>Pricing:</strong> <a href="/.well-known/x402">/.well-known/x402</a></li>
-                        </ul>
-                        <p style="margin-top: 1rem;">Supports direct tool calls for training, prediction, and feedback.</p>
+                        <h2>🚀 How It Works</h2>
+                        <p><strong>1. Train:</strong> POST your data, get back a portable model artifact<br>
+                        <strong>2. Cache:</strong> artifact_id is cached for 5 minutes = instant predictions<br>
+                        <strong>3. Inference:</strong> Online (via cache) or offline (download artifact)</p>
+                        <p style="margin-top: 1rem; font-size: 0.9rem; color: #a0a0d0;">
+                            <strong>Architecture:</strong> Stateless service. No model storage. You own your artifacts. 
+                            Use them locally, in production, or via our caching layer for fast online serving.
+                        </p>
                     </div>
 
                     <div class="card">
-                        <h2>👨‍💻 For Developers</h2>
-                        <p>Use our REST API for programmatic access:</p>
+                        <h2>🤖 MCP Integration</h2>
+                        <p>Connect AI agents via Model Context Protocol:</p>
                         <ul>
-                            <li><strong>Health Check:</strong> <a href="/healthz">/healthz</a></li>
-                            <li><strong>List Models:</strong> <a href="/models">/models</a></li>
-                            <li><strong>Train:</strong> POST <code>/train</code></li>
-                            <li><strong>Predict:</strong> POST <code>/predict_from_artifact</code></li>
-                            <li><strong>Upload Data:</strong> POST <code>/upload_data</code></li>
+                            <li><strong>Endpoint:</strong> <code style="color: #50fa7b;">warpgbm.ai/mcp/sse</code></li>
+                            <li><strong>Tools:</strong> train, predict, upload_data, feedback</li>
+                            <li><strong>Smart Caching:</strong> artifact_id → 5min TTL → sub-100ms inference</li>
                         </ul>
+                        <p style="margin-top: 1rem;"><a href="/.well-known/mcp.json">View MCP Manifest →</a></p>
                     </div>
 
                     <div class="card">
-                        <h2>⚡ Available Models</h2>
-                        <p>Choose from multiple gradient boosting backends:</p>
+                        <h2>⚡ Model Backends</h2>
                         <div style="margin: 1rem 0;">
                             <span class="badge gpu">GPU</span>
-                            <strong>WarpGBM</strong> - GPU-accelerated GBDT with era-aware splitting
+                            <strong>WarpGBM</strong> - 13× faster than LightGBM. Custom CUDA kernels. Invariant learning.
                         </div>
                         <div>
                             <span class="badge cpu">CPU</span>
-                            <strong>LightGBM</strong> - Microsoft's fast, distributed gradient boosting
+                            <strong>LightGBM</strong> - Microsoft's distributed gradient boosting. Battle-tested.
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h2>🎯 Quick Start Example</h2>
-                    <p>Train a model using curl:</p>
+                    <h2>🎯 Iris Dataset Example</h2>
+                    <p>Train a multiclass classifier on Iris (60 samples for proper binning):</p>
                     <div class="code">
-curl -X POST https://warpgbm.ai/train \\<br>
-  -H "Content-Type: application/json" \\<br>
-  -d '{<br>
-    "X": [[1,2,3], [4,5,6], [7,8,9]],<br>
-    "y": [0, 1, 2],<br>
-    "model_type": "lightgbm",<br>
-    "objective": "multiclass",<br>
-    "num_class": 3<br>
-  }'
+<span class="keyword">curl</span> -X POST https://warpgbm.ai/train <span class="keyword">\\</span><br>
+  -H <span class="string">"Content-Type: application/json"</span> <span class="keyword">\\</span><br>
+  -d <span class="string">'{<br>
+  "X": [[5.1,3.5,1.4,0.2], [4.9,3,1.4,0.2], [4.7,3.2,1.3,0.2], [4.6,3.1,1.5,0.2], [5,3.6,1.4,0.2],<br>
+        [7,3.2,4.7,1.4], [6.4,3.2,4.5,1.5], [6.9,3.1,4.9,1.5], [5.5,2.3,4,1.3], [6.5,2.8,4.6,1.5],<br>
+        [6.3,3.3,6,2.5], [5.8,2.7,5.1,1.9], [7.1,3,5.9,2.1], [6.3,2.9,5.6,1.8], [6.5,3,5.8,2.2],<br>
+        [7.6,3,6.6,2.1], [4.9,2.5,4.5,1.7], [7.3,2.9,6.3,1.8], [6.7,2.5,5.8,1.8], [7.2,3.6,6.1,2.5]] * 3,<br>
+  "y": [0,0,0,0,0, 1,1,1,1,1, 2,2,2,2,2,2,2,2,2,2] * 3,<br>
+  "model_type": "warpgbm",<br>
+  "objective": "multiclass",<br>
+  "n_estimators": 100<br>
+}'</span>
+<br><br>
+<span class="keyword"># Response includes artifact_id for caching:</span><br>
+{<br>
+  <span class="string">"artifact_id"</span>: <span class="string">"abc123..."</span>,<br>
+  <span class="string">"model_artifact_joblib"</span>: <span class="string">"H4sIA..."</span>,<br>
+  <span class="string">"training_time_seconds"</span>: <span class="number">0.0</span><br>
+}<br><br>
+<span class="keyword"># Fast inference with cached artifact:</span><br>
+<span class="keyword">curl</span> -X POST https://warpgbm.ai/predict_from_artifact <span class="keyword">\\</span><br>
+  -d <span class="string">'{"artifact_id": "abc123...", "X": [[5,3.4,1.5,0.2], [6.7,3.1,4.4,1.4], [7.7,3.8,6.7,2.2]]}'</span><br><br>
+<span class="keyword"># Predictions: [0, 1, 2]  ← Perfect classification!</span>
                     </div>
                 </div>
 
-                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <h2 style="color: white;">🐍 WarpGBM Python Package</h2>
-                    <p>For production ML workflows, install the full Python package:</p>
-                    <div class="code" style="background: rgba(0,0,0,0.2); color: #fff;">
-pip install git+https://github.com/jefferythewind/warpgbm.git
+                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-color: rgba(255,255,255,0.2);">
+                    <h2 style="color: white;">🐍 Want Local Control? Use the Python Package</h2>
+                    <p style="color: rgba(255,255,255,0.9);">For production ML workflows, install WarpGBM directly and use your own GPU:</p>
+                    <div class="code" style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2);">
+<span class="keyword">pip install</span> <span class="string">git+https://github.com/jefferythewind/warpgbm.git</span>
                     </div>
-                    <p style="margin-top: 1rem;"><strong>Why use Python directly?</strong></p>
-                    <ul style="list-style: disc; padding-left: 1.5rem; margin-top: 0.5rem;">
-                        <li>✅ Free - Use your own GPU</li>
-                        <li>✅ Full control - Custom losses, callbacks, cross-validation</li>
-                        <li>✅ Richer API - Feature importance, era analysis, SHAP</li>
-                        <li>✅ Faster - No serialization overhead</li>
-                        <li>✅ 91+ GitHub stars, GPL-3.0 license</li>
+                    <p style="margin-top: 1rem; color: rgba(255,255,255,0.9);"><strong>Python Package Benefits:</strong></p>
+                    <ul style="list-style: disc; padding-left: 1.5rem; color: rgba(255,255,255,0.85);">
+                        <li>✅ Free - Use your own GPU hardware</li>
+                        <li>✅ Full API - Custom losses, callbacks, feature importance, SHAP</li>
+                        <li>✅ No serialization overhead - Train and predict in-process</li>
+                        <li>✅ Invariant learning - Directional Era-Splitting (DES) algorithm</li>
+                        <li>✅ 91+ stars on GitHub • GPL-3.0 license</li>
                     </ul>
                     <div style="margin-top: 1rem;">
-                        <a href="https://github.com/jefferythewind/warpgbm" target="_blank" style="color: white; text-decoration: underline;">📦 View on GitHub</a>
+                        <a href="https://github.com/jefferythewind/warpgbm" target="_blank" style="color: white; text-decoration: underline; font-weight: 600;">📦 View on GitHub</a>
                         &nbsp;&nbsp;|&nbsp;&nbsp;
-                        <a href="https://github.com/jefferythewind/warpgbm/blob/main/AGENT_GUIDE.md" target="_blank" style="color: white; text-decoration: underline;">📘 Python Agent Guide</a>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h2>💡 MCP Service Features</h2>
-                    <p><em>Use this cloud API for quick experiments and prototyping:</em></p>
-                    <div class="grid" style="margin-top: 1rem;">
-                        <div>
-                            <strong>🔒 Stateless Design</strong>
-                            <p style="font-size: 0.9rem; color: #666;">No model storage - get portable artifacts</p>
-                        </div>
-                        <div>
-                            <strong>⚡ GPU-Accelerated</strong>
-                            <p style="font-size: 0.9rem; color: #666;">WarpGBM trains on NVIDIA A10G GPUs</p>
-                        </div>
-                        <div>
-                            <strong>💰 Pay-per-use</strong>
-                            <p style="font-size: 0.9rem; color: #666;">X402 micropayments on Base network</p>
-                        </div>
-                        <div>
-                            <strong>📊 Data Formats</strong>
-                            <p style="font-size: 0.9rem; color: #666;">CSV, Parquet, JSON arrays</p>
-                        </div>
+                        <a href="https://github.com/jefferythewind/warpgbm/blob/main/AGENT_GUIDE.md" target="_blank" style="color: white; text-decoration: underline; font-weight: 600;">📘 Agent Guide</a>
                     </div>
                 </div>
 
                 <footer>
-                    <p>WarpGBM MCP Service | <a href="https://github.com/jefferythewind/warpgbm" style="color: white;">GitHub</a></p>
-                    <p style="opacity: 0.8; margin-top: 0.5rem;">Built with FastAPI, Modal, and MCP protocol</p>
+                    <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+                        <strong>WarpGBM MCP</strong> - Cloud GPU Gradient Boosting Service
+                    </p>
+                    <p style="opacity: 0.7;">
+                        Built with FastAPI • Modal A10G GPUs • Model Context Protocol<br>
+                        <a href="https://github.com/jefferythewind/warpgbm" style="color: #667eea;">⭐ Star on GitHub</a>
+                    </p>
                 </footer>
             </div>
         </body>
