@@ -113,7 +113,16 @@ async def root(request: Request):
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>WarpGBM MCP - Cloud GPU Gradient Boosting</title>
+            <title>WarpGBM MCP - GPU-Accelerated Gradient Boosting via Model Context Protocol</title>
+            <meta name="description" content="Cloud MCP service for GPU-accelerated gradient boosting. Train on A10G GPUs, get portable artifacts, cache for millisecond inference. Neural-speed GBDT for AI agents.">
+            <meta property="og:title" content="WarpGBM MCP - GPU Gradient Boosting for AI Agents">
+            <meta property="og:description" content="Cloud MCP service: Train models on A10G GPUs • Get portable artifacts • Smart caching for sub-100ms inference">
+            <meta property="og:image" content="https://github.com/user-attachments/assets/dee9de16-091b-49c1-a8fa-2b4ab6891184">
+            <meta property="og:url" content="https://warpgbm.ai">
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:title" content="WarpGBM MCP - GPU Gradient Boosting for AI Agents">
+            <meta name="twitter:description" content="Cloud MCP service: Train on A10G GPUs • Portable artifacts • Smart caching">
+            <meta name="twitter:image" content="https://github.com/user-attachments/assets/dee9de16-091b-49c1-a8fa-2b4ab6891184">
             <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body {
