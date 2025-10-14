@@ -186,3 +186,69 @@ class X402VerifyResponse(BaseModel):
     expires_in: Optional[int] = Field(default=None, description="Token expiry in seconds")
     message: Optional[str] = Field(default=None, description="Additional information about verification status")
 
+
+class DataUploadRequest(BaseModel):
+    """Request schema for data upload endpoint"""
+    
+    file_content: str = Field(..., description="Base64-encoded file content")
+    file_format: Literal["csv", "parquet"] = Field(..., description="File format")
+    target_column: Optional[str] = Field(default=None, description="Column name for target variable (y)")
+    feature_columns: Optional[List[str]] = Field(default=None, description="Column names for features (X). If None, all columns except target are used.")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "file_content": "<base64-encoded-csv>",
+                "file_format": "csv",
+                "target_column": "target",
+                "feature_columns": ["feature1", "feature2", "feature3"]
+            }
+        }
+
+
+class DataUploadResponse(BaseModel):
+    """Response schema for data upload endpoint"""
+    
+    num_samples: int = Field(..., description="Number of samples in dataset")
+    num_features: int = Field(..., description="Number of features")
+    feature_names: List[str] = Field(..., description="Feature column names")
+    target_name: str = Field(..., description="Target column name")
+    preview: List[dict] = Field(..., description="First 5 rows of data")
+
+
+class FeedbackRequest(BaseModel):
+    """Request schema for agent feedback"""
+    
+    feedback_type: Literal["bug", "feature_request", "documentation", "performance", "general"] = Field(
+        ..., 
+        description="Type of feedback"
+    )
+    message: str = Field(..., description="Feedback message")
+    endpoint: Optional[str] = Field(default=None, description="Related endpoint (if applicable)")
+    model_type: Optional[str] = Field(default=None, description="Related model type (if applicable)")
+    severity: Literal["low", "medium", "high", "critical"] = Field(
+        default="medium",
+        description="Severity level"
+    )
+    agent_info: Optional[dict] = Field(default=None, description="Agent metadata (name, version, etc.)")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "feedback_type": "feature_request",
+                "message": "Would love to see support for streaming predictions",
+                "endpoint": "/predict_from_artifact",
+                "severity": "medium",
+                "agent_info": {"name": "cursor", "version": "1.0"}
+            }
+        }
+
+
+class FeedbackResponse(BaseModel):
+    """Response schema for feedback submission"""
+    
+    feedback_id: str = Field(..., description="Unique feedback identifier")
+    status: str = Field(..., description="Submission status")
+    message: str = Field(..., description="Confirmation message")
+    timestamp: float = Field(..., description="Submission timestamp")
+

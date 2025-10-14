@@ -4,13 +4,9 @@ Integration tests for end-to-end workflows
 
 import pytest
 import numpy as np
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
 
 
-def test_complete_multiclass_workflow():
+def test_complete_multiclass_workflow(client):
     """Test complete workflow: train -> predict -> predict_proba"""
     # Generate synthetic data
     np.random.seed(42)
@@ -35,14 +31,13 @@ def test_complete_multiclass_workflow():
     assert train_response.status_code == 200
     
     train_data = train_response.json()
-    model_artifact = train_data["model_artifact_joblib"]
-    assert model_artifact is not None
+    artifact_id = train_data["artifact_id"]  # Use artifact_id for GPU routing
+    assert train_data["model_artifact_joblib"] is not None
     
-    # Predict
+    # Predict using artifact_id (preserves model_type for GPU routing)
     predict_request = {
-        "model_artifact": model_artifact,
+        "artifact_id": artifact_id,
         "X": X_test,
-        "format": "joblib",
     }
     
     predict_response = client.post("/predict_from_artifact", json=predict_request)
@@ -53,7 +48,7 @@ def test_complete_multiclass_workflow():
     assert len(predictions) == 10
     assert all(0 <= p <= 2 for p in predictions)
     
-    # Predict probabilities
+    # Predict probabilities using artifact_id (preserves model_type for GPU routing)
     proba_response = client.post("/predict_proba_from_artifact", json=predict_request)
     assert proba_response.status_code == 200
     
@@ -67,19 +62,19 @@ def test_complete_multiclass_workflow():
         assert 0.99 <= sum(probs) <= 1.01
 
 
-def test_mcp_manifest():
+def test_mcp_manifest(client):
     """Test MCP manifest is accessible"""
     response = client.get("/.well-known/mcp.json")
     assert response.status_code == 200
     
     data = response.json()
-    assert data["name"] == "warpgbm"
+    assert data["name"] == "warpgbm-mcp"  # Service name, not package name
     assert "capabilities" in data
     assert "train" in data["capabilities"]
     assert "predict_from_artifact" in data["capabilities"]
 
 
-def test_x402_manifest():
+def test_x402_manifest(client):
     """Test X402 manifest is accessible"""
     response = client.get("/.well-known/x402")
     assert response.status_code == 200

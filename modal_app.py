@@ -15,6 +15,9 @@ app = modal.App("warpgbm-mcp")
 # Create Modal Dict for artifact caching (persists across container instances)
 artifact_cache_dict = modal.Dict.from_name("artifact-cache", create_if_missing=True)
 
+# Create Modal Volume for feedback storage (persistent across deployments)
+feedback_volume = modal.Volume.from_name("warpgbm-feedback", create_if_missing=True)
+
 # Define container image with dependencies
 # Use Modal's GPU image which includes CUDA toolkit for WarpGBM's JIT compilation
 image = (
@@ -34,6 +37,9 @@ image = (
         "skl2onnx>=1.16.0",
         "slowapi>=0.1.9",
         "httpx>=0.24.0",
+        # Data processing
+        "pandas>=2.0.0",
+        "pyarrow>=14.0.0",
         # Model backends
         "lightgbm>=4.0.0",
         "scikit-learn>=1.3.0",
@@ -46,7 +52,7 @@ image = (
     .pip_install("warpgbm", extra_options="--no-build-isolation")
     .add_local_dir("app", remote_path="/root/app")
     .add_local_dir(".well-known", remote_path="/root/.well-known")
-    .add_local_file("AGENT_GUIDE.md", remote_path="/root/AGENT_GUIDE.md")
+    .add_local_dir("docs", remote_path="/root/docs")
 )
 
 
@@ -108,6 +114,64 @@ def warpgbm_gpu_predict(model_artifact: str, X):
     preds = model.predict(X)
     
     return preds.tolist() if hasattr(preds, 'tolist') else list(preds)
+
+
+@app.function(
+    image=image,
+    gpu="A10G",  # Specific GPU type for WarpGBM
+    cpu=4.0,
+    memory=16384,  # 16GB RAM
+    timeout=600,  # 10 minutes max
+    scaledown_window=60,  # Shut down after 1 minute idle (save $$$)
+    max_containers=1,  # Max 1 GPU at a time (safest for cost control)
+)
+def warpgbm_gpu_predict_proba(model_artifact: str, X):
+    """
+    GPU-accelerated WarpGBM probability prediction.
+    WarpGBM is GPU-only, so predictions must also run on GPU.
+    
+    Args:
+        model_artifact: Base64-encoded gzipped joblib model
+        X: Feature matrix (list of lists)
+    
+    Returns:
+        list: Probability predictions (n_samples, n_classes)
+    """
+    import sys
+    sys.path.insert(0, "/root")
+    
+    import numpy as np
+    import torch
+    import joblib
+    import base64
+    import gzip
+    import io
+    
+    # Deserialize model with GPU support (DON'T force CPU!)
+    compressed_bytes = base64.b64decode(model_artifact)
+    model_bytes = gzip.decompress(compressed_bytes)
+    buf = io.BytesIO(model_bytes)
+    
+    # Load with GPU mapping (WarpGBM needs CUDA tensors)
+    original_load = torch.load
+    def gpu_load(*args, **kwargs):
+        if 'map_location' not in kwargs:
+            kwargs['map_location'] = 'cuda'  # Force GPU for WarpGBM
+        return original_load(*args, **kwargs)
+    
+    torch.load = gpu_load
+    try:
+        model = joblib.load(buf)
+    finally:
+        torch.load = original_load
+    
+    # Convert input to numpy
+    X = np.array(X, dtype=np.float32)
+    
+    # Predict probabilities on GPU
+    probs = model.predict_proba(X)
+    
+    return probs.tolist() if hasattr(probs, 'tolist') else list(probs)
 
 
 @app.function(
@@ -183,8 +247,9 @@ def train_warpgbm_gpu(X, y, **params):
     timeout=900,  # 15 minutes max per request
     scaledown_window=300,  # Keep warm for 5 minutes
     max_containers=10,  # Max 10 concurrent requests
+    volumes={"/data": feedback_volume},  # Mount volume for feedback storage
 )
-@modal.asgi_app()
+@modal.asgi_app(custom_domains=["warpgbm.ai"])
 def serve():
     """
     Serve the FastAPI app (CPU-only for cost efficiency).
@@ -208,6 +273,7 @@ def serve():
     import app.main
     app.main._gpu_training_function = train_warpgbm_gpu
     app.main._gpu_predict_function = warpgbm_gpu_predict
+    app.main._gpu_predict_proba_function = warpgbm_gpu_predict_proba
     
     from app.main import app as fastapi_app
     return fastapi_app

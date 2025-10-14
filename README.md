@@ -2,7 +2,40 @@
 
 > Multi-model gradient boosting as a stateless MCP + X402 service
 
-## 🎯 Overview
+🌐 **Production Service**: https://warpgbm.ai  
+📡 **MCP Endpoint**: https://warpgbm.ai/mcp/sse  
+📖 **API Documentation**: https://warpgbm.ai/docs
+
+## 🔗 About WarpGBM
+
+**This is a cloud API service wrapper around the [WarpGBM Python package](https://github.com/jefferythewind/warpgbm).**
+
+### 🐍 WarpGBM Python Package (Recommended for Production)
+
+For production ML workflows, use **WarpGBM directly**:
+
+- **GitHub**: https://github.com/jefferythewind/warpgbm ⭐ 91+
+- **Installation**: `pip install git+https://github.com/jefferythewind/warpgbm.git`
+- **Agent Guide**: https://github.com/jefferythewind/warpgbm/blob/main/AGENT_GUIDE.md
+- **License**: GPL-3.0
+
+### MCP Service vs Python Package
+
+| Feature | MCP Service (This Repo) | Python Package |
+|---------|------------------------|----------------|
+| **Installation** | None needed | `pip install git+...` |
+| **GPU** | Cloud (pay-per-use) | Your GPU (free) |
+| **Control** | REST API parameters | Full Python API |
+| **Features** | Train, predict, upload | + Cross-validation, feature importance, callbacks |
+| **Best For** | Quick experiments, demos | Production pipelines, research |
+| **Cost** | $0.01 per training | Free (your hardware) |
+
+**Use this MCP service for**: Quick tests, prototyping, agents without local GPU  
+**Use Python package for**: Production ML, research, cost savings, full control
+
+---
+
+## 🎯 MCP Service Overview
 
 WarpGBM-MCP is a **universal gradient boosting service** that exposes multiple GBDT backends through a unified Model Context Protocol (MCP) interface. AI agents and developers can choose the best model for their task and get portable artifacts for inference.
 
@@ -93,7 +126,7 @@ modal token new
 # Deploy
 modal deploy modal_app.py
 
-# Outputs public HTTPS URLs for each endpoint
+# The service will be available at https://warpgbm.ai
 ```
 
 ## 📡 API Endpoints

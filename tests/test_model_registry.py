@@ -3,14 +3,10 @@ Test model registry and multi-model support
 """
 
 import pytest
-from fastapi.testclient import TestClient
-from app.main import app
 from app.model_registry import get_registry
 
-client = TestClient(app)
 
-
-def test_list_models():
+def test_list_models(client):
     """Test listing available models"""
     response = client.get("/models")
     assert response.status_code == 200
@@ -22,7 +18,7 @@ def test_list_models():
     assert data["default"] == "warpgbm"
 
 
-def test_model_registry():
+def test_model_registry(client):
     """Test model registry functionality"""
     registry = get_registry()
     
@@ -39,7 +35,7 @@ def test_model_registry():
     assert lgb_adapter is not None
 
 
-def test_train_warpgbm():
+def test_train_warpgbm(client):
     """Test training with WarpGBM"""
     request_data = {
         "X": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]],
@@ -60,7 +56,7 @@ def test_train_warpgbm():
     assert "model_artifact_joblib" in data
 
 
-def test_train_lightgbm():
+def test_train_lightgbm(client):
     """Test training with LightGBM"""
     request_data = {
         "X": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]],
@@ -82,7 +78,7 @@ def test_train_lightgbm():
     assert "model_artifact_joblib" in data
 
 
-def test_train_unknown_model():
+def test_train_unknown_model(client):
     """Test training with unknown model type"""
     request_data = {
         "X": [[1.0, 2.0]],
@@ -96,7 +92,7 @@ def test_train_unknown_model():
     assert response.status_code == 422  # Validation error
 
 
-def test_compare_warpgbm_lightgbm():
+def test_compare_warpgbm_lightgbm(client):
     """Test that both models can train and predict on same data"""
     train_data = {
         "X": [[i, i+1] for i in range(10)],
@@ -123,11 +119,10 @@ def test_compare_warpgbm_lightgbm():
         train_result = train_response.json()
         assert train_result["model_type"] == model_type
         
-        # Predict
+        # Predict using artifact_id (preserves model_type for GPU routing)
         predict_request = {
-            "model_artifact": train_result["model_artifact_joblib"],
+            "artifact_id": train_result["artifact_id"],
             "X": test_data,
-            "format": "joblib"
         }
         
         predict_response = client.post("/predict_from_artifact", json=predict_request)

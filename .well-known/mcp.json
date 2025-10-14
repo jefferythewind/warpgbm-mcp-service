@@ -1,9 +1,16 @@
 {
   "name": "warpgbm-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Multi-model gradient boosting service supporting WarpGBM (GPU-accelerated with era-aware splitting) and LightGBM. Train models and get portable artifacts for inference.",
   "author": "jefferythewind",
   "homepage": "https://github.com/jefferythewind/warpgbm",
+  "license": "MIT",
+  "contact": {
+    "email": "support@warpgbm.ai",
+    "github": "https://github.com/jefferythewind/warpgbm/issues"
+  },
+  "categories": ["machine-learning", "gradient-boosting", "gpu-acceleration", "inference"],
+  "tags": ["ml", "gbdt", "warpgbm", "lightgbm", "gpu", "training", "inference"],
   "models": [
     {
       "id": "warpgbm",
@@ -150,6 +157,92 @@
         "currency": "USD",
         "per": "request"
       }
+    },
+    "upload_data": {
+      "description": "Upload CSV or Parquet files for training. Parses files and returns structured X and y arrays ready for training.",
+      "endpoint": "/upload_data",
+      "method": "POST",
+      "parameters": {
+        "file_content": {
+          "type": "string",
+          "description": "Base64-encoded file content",
+          "required": true
+        },
+        "file_format": {
+          "type": "string",
+          "enum": ["csv", "parquet"],
+          "description": "File format",
+          "required": true
+        },
+        "target_column": {
+          "type": "string",
+          "description": "Column name for target variable (y)"
+        },
+        "feature_columns": {
+          "type": "array",
+          "description": "Column names for features (X). If not specified, all columns except target are used."
+        }
+      },
+      "returns": {
+        "num_samples": "Number of samples in dataset",
+        "num_features": "Number of features",
+        "feature_names": "Array of feature column names",
+        "target_name": "Target column name",
+        "preview": "First 5 rows of data"
+      },
+      "pricing": {
+        "amount": 0.005,
+        "currency": "USD",
+        "per": "request"
+      }
+    },
+    "feedback": {
+      "description": "Submit feedback about the service. Agents can report bugs, request features, or provide general feedback.",
+      "endpoint": "/feedback",
+      "method": "POST",
+      "parameters": {
+        "feedback_type": {
+          "type": "string",
+          "enum": ["bug", "feature_request", "documentation", "performance", "general"],
+          "description": "Type of feedback",
+          "required": true
+        },
+        "message": {
+          "type": "string",
+          "description": "Feedback message",
+          "required": true
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "Related endpoint (if applicable)"
+        },
+        "model_type": {
+          "type": "string",
+          "description": "Related model type (if applicable)"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "default": "medium",
+          "description": "Severity level"
+        },
+        "agent_info": {
+          "type": "object",
+          "description": "Agent metadata (name, version, etc.)"
+        }
+      },
+      "returns": {
+        "feedback_id": "Unique feedback identifier",
+        "status": "Submission status",
+        "message": "Confirmation message",
+        "timestamp": "Submission timestamp"
+      },
+      "pricing": {
+        "amount": 0,
+        "currency": "USD",
+        "per": "request",
+        "note": "Feedback is free"
+      }
     }
   },
   "authentication": {
@@ -171,6 +264,6 @@
       "description": "REST API endpoints"
     }
   },
-  "entrypoint": "https://mcp.warpgbm.ai"
+  "entrypoint": "https://warpgbm.ai"
 }
 

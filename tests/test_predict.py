@@ -3,14 +3,10 @@ Test prediction endpoints
 """
 
 import pytest
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
 
 
-def test_predict_from_artifact():
-    """Test full train -> predict workflow"""
+def test_predict_from_artifact(client):
+    """Test full train -> predict workflow using artifact_id"""
     # First, train a model
     train_request = {
         "X": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]],
@@ -26,13 +22,12 @@ def test_predict_from_artifact():
     assert train_response.status_code == 200
     
     train_data = train_response.json()
-    model_artifact = train_data["model_artifact_joblib"]
+    artifact_id = train_data["artifact_id"]  # Use artifact_id for caching
     
-    # Now predict
+    # Now predict using artifact_id (preserves model_type metadata)
     predict_request = {
-        "model_artifact": model_artifact,
+        "artifact_id": artifact_id,  # Use cached artifact with metadata
         "X": [[2.0, 3.0], [6.0, 7.0]],
-        "format": "joblib",
     }
     
     predict_response = client.post("/predict_from_artifact", json=predict_request)
@@ -44,8 +39,8 @@ def test_predict_from_artifact():
     assert predict_data["num_samples"] == 2
 
 
-def test_predict_proba_from_artifact():
-    """Test probability prediction"""
+def test_predict_proba_from_artifact(client):
+    """Test probability prediction using artifact_id (WarpGBM GPU)"""
     # Train a model
     train_request = {
         "X": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]],
@@ -58,13 +53,13 @@ def test_predict_proba_from_artifact():
     }
     
     train_response = client.post("/train", json=train_request)
-    model_artifact = train_response.json()["model_artifact_joblib"]
+    assert train_response.status_code == 200
+    artifact_id = train_response.json()["artifact_id"]
     
-    # Predict probabilities
+    # Predict probabilities using artifact_id
     predict_request = {
-        "model_artifact": model_artifact,
+        "artifact_id": artifact_id,  # Use cached artifact with metadata
         "X": [[2.0, 3.0]],
-        "format": "joblib",
     }
     
     predict_response = client.post("/predict_proba_from_artifact", json=predict_request)
@@ -76,7 +71,7 @@ def test_predict_proba_from_artifact():
     assert len(predict_data["probabilities"][0]) == 2  # Binary classification
 
 
-def test_predict_invalid_artifact():
+def test_predict_invalid_artifact(client):
     """Test prediction with invalid artifact"""
     predict_request = {
         "model_artifact": "invalid_base64",

@@ -11,6 +11,45 @@ The service returns **portable model artifacts** (joblib format) that can be reu
 
 ---
 
+## 🔗 About the WarpGBM Python Package
+
+**This MCP service is a cloud API wrapper around the WarpGBM Python package.**
+
+### Want More Control? Use WarpGBM Directly!
+
+For production ML workflows, consider using the **WarpGBM Python package** directly:
+
+- **GitHub**: https://github.com/jefferythewind/warpgbm (91+ ⭐)
+- **Full Agent Guide**: https://github.com/jefferythewind/warpgbm/blob/main/AGENT_GUIDE.md
+- **License**: GPL-3.0
+
+### MCP Service vs Python Package
+
+| Feature | MCP Service (This) | Python Package |
+|---------|-------------------|----------------|
+| Installation | None needed | `pip install git+https://github.com/jefferythewind/warpgbm.git` |
+| GPU Access | Cloud (pay-per-use) | Your local GPU (free) |
+| API | REST + MCP tools | Full Python API |
+| Control | Limited parameters | Full control + custom losses |
+| Features | Train, predict, upload | + Cross-validation, feature importance, era analysis |
+| Best For | Quick experiments | Production ML pipelines |
+
+**Use this MCP service for**: Quick tests, prototyping, no local GPU  
+**Use Python package for**: Production, research, full control, cost savings
+
+### Installation (Python Package)
+```bash
+# Standard
+pip install git+https://github.com/jefferythewind/warpgbm.git
+
+# Colab
+!pip install warpgbm --no-build-isolation
+```
+
+See [WARPGBM_PYTHON_GUIDE.md](./WARPGBM_PYTHON_GUIDE.md) for complete Python package documentation.
+
+---
+
 ## 📊 Available Models
 
 ### WarpGBM
@@ -208,11 +247,12 @@ The service supports X402 micropayments on Base network:
 
 ## 🔗 Service Info
 
-- **Base URL**: `https://tdelise--warpgbm-mcp-serve.modal.run`
-- **Health Check**: `GET /healthz`
-- **API Docs**: `GET /docs`
-- **MCP Manifest**: `GET /.well-known/mcp.json`
-- **X402 Pricing**: `GET /.well-known/x402`
+- **Base URL**: `https://warpgbm.ai`
+- **MCP Endpoint**: `https://warpgbm.ai/mcp/sse`
+- **Health Check**: `GET https://warpgbm.ai/healthz`
+- **API Docs**: `GET https://warpgbm.ai/docs`
+- **MCP Manifest**: `GET https://warpgbm.ai/.well-known/mcp.json`
+- **X402 Pricing**: `GET https://warpgbm.ai/.well-known/x402`
 
 ---
 

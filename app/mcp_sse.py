@@ -182,6 +182,36 @@ async def mcp_sse_post(request: Request):
                                 "type": "object",
                                 "properties": {}
                             }
+                        },
+                        {
+                            "name": "upload_data",
+                            "description": "Upload CSV or Parquet files for training. Parses files and returns structured X and y arrays ready for training.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "file_content": {"type": "string", "description": "Base64-encoded file content"},
+                                    "file_format": {"type": "string", "enum": ["csv", "parquet"], "description": "File format"},
+                                    "target_column": {"type": "string", "description": "Column name for target variable (y)"},
+                                    "feature_columns": {"type": "array", "description": "Column names for features (X). If not specified, all columns except target are used."}
+                                },
+                                "required": ["file_content", "file_format"]
+                            }
+                        },
+                        {
+                            "name": "submit_feedback",
+                            "description": "Submit feedback about the service. Agents can report bugs, request features, or provide general feedback.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "feedback_type": {"type": "string", "enum": ["bug", "feature_request", "documentation", "performance", "general"], "description": "Type of feedback"},
+                                    "message": {"type": "string", "description": "Feedback message"},
+                                    "endpoint": {"type": "string", "description": "Related endpoint (if applicable)"},
+                                    "model_type": {"type": "string", "description": "Related model type (if applicable)"},
+                                    "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"], "default": "medium", "description": "Severity level"},
+                                    "agent_info": {"type": "object", "description": "Agent metadata (name, version, etc.)"}
+                                },
+                                "required": ["feedback_type", "message"]
+                            }
                         }
                     ]
                 }
@@ -199,7 +229,7 @@ async def mcp_sse_post(request: Request):
             if tool_name == "get_agent_guide":
                 try:
                     import os
-                    guide_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "AGENT_GUIDE.md")
+                    guide_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "AGENT_GUIDE.md")
                     with open(guide_path, "r") as f:
                         guide_content = f.read()
                     return {
@@ -228,7 +258,9 @@ async def mcp_sse_post(request: Request):
             endpoint_map = {
                 "list_models": "/models",
                 "train": "/train",
-                "predict_from_artifact": "/predict_from_artifact"
+                "predict_from_artifact": "/predict_from_artifact",
+                "upload_data": "/upload_data",
+                "submit_feedback": "/feedback"
             }
             
             endpoint = endpoint_map.get(tool_name)
