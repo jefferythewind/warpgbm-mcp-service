@@ -452,6 +452,58 @@ async def health_check(request: Request):
     )
 
 
+@app.get("/train", include_in_schema=False)
+async def train_info():
+    """
+    Information about the train endpoint.
+    The train endpoint accepts POST requests only.
+    """
+    return {
+        "message": "🚀 Train Endpoint - POST requests only",
+        "description": "Train GPU-accelerated gradient boosting models on A10G GPUs",
+        "how_to_use": {
+            "method": "POST",
+            "endpoint": "https://warpgbm.ai/train",
+            "content_type": "application/json"
+        },
+        "features": [
+            "⚡ WarpGBM - GPU-native, fastest GBDT implementation",
+            "🌲 LightGBM - CPU-based, battle-tested classic",
+            "📦 Portable artifacts - Joblib format for easy deployment",
+            "💾 Smart caching - artifact_id valid for 5 minutes",
+            "🎯 Multiple objectives - regression, binary, multiclass"
+        ],
+        "quick_example": {
+            "model_type": "warpgbm",
+            "objective": "multiclass",
+            "X": [[5.1, 3.5, 1.4, 0.2], [6.7, 3.0, 5.2, 2.3]],
+            "y": [0, 2],
+            "num_trees": 100,
+            "learning_rate": 0.1,
+            "max_depth": 5
+        },
+        "example_curl": '''curl -X POST https://warpgbm.ai/train \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model_type": "warpgbm",
+    "objective": "multiclass",
+    "num_class": 3,
+    "X": [[5.1,3.5,1.4,0.2], [6.7,3.0,5.2,2.3]],
+    "y": [0, 2],
+    "num_trees": 100,
+    "learning_rate": 0.1,
+    "max_depth": 5
+  }' ''',
+        "response_includes": {
+            "artifact_id": "Fast path for predictions (5-min TTL)",
+            "model_artifact_joblib": "Portable model for offline use",
+            "training_time_seconds": "GPU training time"
+        },
+        "docs": "https://warpgbm.ai/docs#/training/train_model_train_post",
+        "guide": "https://warpgbm.ai/guide"
+    }
+
+
 @app.post("/train", response_model=TrainResponse, tags=["training"])
 @limiter.limit("10/minute")
 async def train_model(
@@ -657,6 +709,65 @@ async def train_model(
         except Exception as e:
             # Unexpected errors - server's fault
             raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
+
+
+@app.get("/predict_from_artifact", include_in_schema=False)
+async def predict_from_artifact_info():
+    """
+    Information about the predict_from_artifact endpoint.
+    The predict_from_artifact endpoint accepts POST requests only.
+    """
+    return {
+        "message": "🔮 Predict From Artifact - POST requests only",
+        "description": "Run blazing-fast inference using trained model artifacts",
+        "how_to_use": {
+            "method": "POST",
+            "endpoint": "https://warpgbm.ai/predict_from_artifact",
+            "content_type": "application/json"
+        },
+        "two_ways_to_predict": {
+            "fast_path": {
+                "method": "Use artifact_id from recent training",
+                "speed": "⚡ Millisecond inference (in-memory cache)",
+                "ttl": "5 minutes",
+                "use_case": "Online inference, real-time predictions"
+            },
+            "portable_path": {
+                "method": "Use model_artifact_joblib from training response",
+                "speed": "🐢 Slower (deserialize each time)",
+                "ttl": "Forever (you store it)",
+                "use_case": "Offline inference, long-term storage"
+            }
+        },
+        "quick_example_fast": {
+            "artifact_id": "abc-123-from-training-response",
+            "X": [[5.1, 3.5, 1.4, 0.2], [6.7, 3.0, 5.2, 2.3]]
+        },
+        "quick_example_portable": {
+            "model_artifact": "base64-encoded-joblib-from-training...",
+            "format": "joblib",
+            "X": [[5.1, 3.5, 1.4, 0.2]]
+        },
+        "example_curl": '''curl -X POST https://warpgbm.ai/predict_from_artifact \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "artifact_id": "your-artifact-id-here",
+    "X": [[5.1,3.5,1.4,0.2], [6.7,3.0,5.2,2.3]]
+  }' ''',
+        "workflow": [
+            "1️⃣ Train a model using POST /train",
+            "2️⃣ Get artifact_id from response (valid 5 min)",
+            "3️⃣ Use artifact_id for fast predictions",
+            "4️⃣ Or save model_artifact_joblib for later"
+        ],
+        "response_includes": {
+            "predictions": "Model predictions as array",
+            "num_samples": "Number of samples predicted",
+            "inference_time_seconds": "Time taken for inference"
+        },
+        "docs": "https://warpgbm.ai/docs#/inference/predict_from_artifact_predict_from_artifact_post",
+        "guide": "https://warpgbm.ai/guide"
+    }
 
 
 @app.post("/predict_from_artifact", response_model=PredictResponse, tags=["inference"])
