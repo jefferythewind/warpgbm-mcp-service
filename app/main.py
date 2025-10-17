@@ -300,7 +300,7 @@ async def root(request: Request):
                         <div class="buttons">
                             <a href="/docs" class="button">📚 API Docs</a>
                             <a href="/guide" class="button">📖 MCP Guide</a>
-                            <a href="https://github.com/jefferythewind/warpgbm" class="button secondary" target="_blank">⭐ GitHub (91 stars)</a>
+                            <a href="https://github.com/jefferythewind/warpgbm-mcp-service" class="button secondary" target="_blank">⭐ GitHub</a>
                         </div>
                     </div>
                 </div>
@@ -398,7 +398,9 @@ async def root(request: Request):
                     </p>
                     <p style="opacity: 0.7;">
                         Built with FastAPI • Modal A10G GPUs • Model Context Protocol<br>
-                        <a href="https://github.com/jefferythewind/warpgbm" style="color: #667eea;">⭐ Star on GitHub</a>
+                        <a href="https://github.com/jefferythewind/warpgbm-mcp-service" style="color: #667eea;">⭐ Service Repo</a>
+                        &nbsp;•&nbsp;
+                        <a href="https://github.com/jefferythewind/warpgbm" style="color: #667eea;">🐍 Python Package (91★)</a>
                     </p>
                 </footer>
             </div>

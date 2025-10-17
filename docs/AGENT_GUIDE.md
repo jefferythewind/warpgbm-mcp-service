@@ -402,7 +402,8 @@ The service supports X402 micropayments on Base network:
 ## 📞 Support & Feedback
 
 - **Service Owner**: jefferythewind
-- **Project**: https://github.com/jefferythewind/warpgbm
+- **MCP Service Repo**: https://github.com/jefferythewind/warpgbm-mcp-service (this service)
+- **WarpGBM Python Package**: https://github.com/jefferythewind/warpgbm (core library)
 - **Modal Dashboard**: https://modal.com/apps/tdelise/main/deployed/warpgbm-mcp
 
 ### 💬 We Want Your Feedback!
