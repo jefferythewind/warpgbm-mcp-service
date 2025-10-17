@@ -887,6 +887,26 @@ async def favicon_ico():
     return RedirectResponse(url="/favicon.svg", status_code=301)
 
 
+@app.api_route("/apple-touch-icon.png", methods=["GET", "HEAD"], include_in_schema=False)
+async def apple_touch_icon():
+    """Serve Apple touch icon (iOS bookmarks/home screen)"""
+    from fastapi.responses import FileResponse
+    import os
+    logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "warpgbm-logo.png")
+    if os.path.exists(logo_path):
+        return FileResponse(logo_path, media_type="image/png")
+    # Fallback to SVG if logo not found
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/favicon.svg", status_code=301)
+
+
+@app.api_route("/apple-touch-icon-precomposed.png", methods=["GET", "HEAD"], include_in_schema=False)
+async def apple_touch_icon_precomposed():
+    """Serve precomposed Apple touch icon (older iOS versions)"""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/apple-touch-icon.png", status_code=301)
+
+
 @app.get("/robots.txt", response_class=PlainTextResponse, include_in_schema=False)
 async def robots_txt():
     """Robots.txt for search engine crawlers"""
@@ -1268,6 +1288,47 @@ async def upload_data(
         raise HTTPException(status_code=400, detail=f"Failed to parse {upload_request.file_format}: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Data upload failed: {str(e)}")
+
+
+@app.get("/feedback", include_in_schema=False)
+async def feedback_info():
+    """
+    Information about the feedback endpoint.
+    The feedback endpoint accepts POST requests only.
+    """
+    return {
+        "message": "💬 Feedback Endpoint - POST requests only",
+        "description": "Help us improve WarpGBM by sharing your experience!",
+        "how_to_use": {
+            "method": "POST",
+            "endpoint": "https://warpgbm.ai/feedback",
+            "content_type": "application/json"
+        },
+        "what_to_share": [
+            "🐛 Bug reports - Issues you encountered",
+            "✨ Feature requests - What would make this better for you?",
+            "📖 Documentation gaps - What wasn't clear?",
+            "⚡ Performance issues - Speed or GPU problems",
+            "💡 General thoughts - Ideas, use cases, success stories"
+        ],
+        "example_curl": 'curl -X POST https://warpgbm.ai/feedback \\\n  -H "Content-Type: application/json" \\\n  -d \'{"feedback_type": "feature_request", "message": "Would love XGBoost support!", "severity": "medium"}\'',
+        "required_fields": {
+            "feedback_type": "One of: bug, feature_request, documentation, performance, general",
+            "message": "Your feedback (be specific!)"
+        },
+        "optional_fields": {
+            "severity": "low | medium | high | critical",
+            "endpoint": "Related API endpoint if applicable",
+            "model_type": "warpgbm or lightgbm if relevant",
+            "agent_info": "Your agent/tool metadata"
+        },
+        "quick_example": {
+            "feedback_type": "feature_request",
+            "message": "Love the artifact caching! Could we get support for custom eval metrics?",
+            "severity": "medium"
+        },
+        "docs": "https://warpgbm.ai/docs#/feedback/submit_feedback_feedback_post"
+    }
 
 
 @app.post("/feedback", response_model=FeedbackResponse, tags=["feedback"])

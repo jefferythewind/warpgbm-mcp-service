@@ -53,6 +53,7 @@ image = (
     .add_local_dir("app", remote_path="/root/app")
     .add_local_dir(".well-known", remote_path="/root/.well-known")
     .add_local_dir("docs", remote_path="/root/docs")
+    .add_local_dir("assets", remote_path="/root/assets")
 )
 
 
