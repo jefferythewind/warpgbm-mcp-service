@@ -1382,6 +1382,13 @@ async def mcp_manifest():
         return json.load(f)
 
 
+@app.api_route("/.well-known/mcp-config", methods=["GET", "HEAD"], include_in_schema=False)
+async def mcp_config():
+    """Alternative MCP config endpoint (redirects to mcp.json)"""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/.well-known/mcp.json", status_code=301)
+
+
 # Serve X402 manifest
 @app.get("/.well-known/x402", include_in_schema=False)
 async def x402_manifest():
