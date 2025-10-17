@@ -123,6 +123,9 @@ async def root(request: Request):
             <meta name="twitter:title" content="WarpGBM MCP - GPU Gradient Boosting for AI Agents">
             <meta name="twitter:description" content="Cloud MCP service: Train on A10G GPUs • Portable artifacts • Smart caching">
             <meta name="twitter:image" content="https://github.com/user-attachments/assets/dee9de16-091b-49c1-a8fa-2b4ab6891184">
+            <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+            <link rel="icon" type="image/png" href="/favicon.png">
+            <link rel="shortcut icon" href="/favicon.ico">
             <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body {
@@ -846,6 +849,40 @@ async def predict_proba_from_artifact(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Probability prediction failed: {str(e)}")
+
+
+@app.get("/favicon.svg", include_in_schema=False)
+async def favicon_svg():
+    """Serve SVG favicon with cyberpunk GPU theme"""
+    from fastapi.responses import Response
+    svg_content = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ffff;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ff00ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffff00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="20" fill="#0a0e27"/>
+  <path d="M30,40 L50,25 L70,40 L70,60 L50,75 L30,60 Z" fill="url(#grad)" opacity="0.8"/>
+  <circle cx="50" cy="50" r="8" fill="#fff"/>
+  <path d="M45,35 L55,35 M40,45 L60,45 M40,55 L60,55 M45,65 L55,65" stroke="#00ffff" stroke-width="2" opacity="0.6"/>
+</svg>'''
+    return Response(content=svg_content, media_type="image/svg+xml")
+
+
+@app.get("/favicon.png", include_in_schema=False)
+async def favicon_png():
+    """Redirect PNG favicon requests to SVG"""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/favicon.svg", status_code=301)
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon_ico():
+    """Redirect ICO favicon requests to SVG"""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/favicon.svg", status_code=301)
 
 
 @app.get("/robots.txt", response_class=PlainTextResponse, include_in_schema=False)
