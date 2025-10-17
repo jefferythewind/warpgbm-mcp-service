@@ -5,7 +5,6 @@
 
 <div align="center">
 
-[![GitHub stars](https://img.shields.io/github/stars/jefferythewind/warpgbm-mcp-service?style=social)](https://github.com/jefferythewind/warpgbm-mcp-service)
 [![smithery badge](https://smithery.ai/badge/@jefferythewind/warpgbm-mcp)](https://smithery.ai/server/@jefferythewind/warpgbm-mcp)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Modal](https://img.shields.io/badge/Deployed%20on-Modal-orange)](https://warpgbm.ai)
