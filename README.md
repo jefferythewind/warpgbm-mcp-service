@@ -1,46 +1,114 @@
-# WarpGBM MCP Service
+# ⚡ WarpGBM MCP Service
 
-> Cloud GPU gradient boosting service with portable artifacts and smart caching
+> **GPU-accelerated gradient boosting as a cloud MCP service**  
+> Train on A10G GPUs • Get `artifact_id` for <100ms cached predictions • Download portable artifacts
 
-🌐 **Production Service**: https://warpgbm.ai  
-📡 **MCP Endpoint**: https://warpgbm.ai/mcp/sse  
-📖 **API Documentation**: https://warpgbm.ai/docs
+<div align="center">
 
-## ⚡ What is This?
+[![smithery badge](https://smithery.ai/badge/@jefferythewind/warpgbm-mcp)](https://smithery.ai/server/@jefferythewind/warpgbm-mcp)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Modal](https://img.shields.io/badge/Deployed%20on-Modal-orange)](https://warpgbm.ai)
+[![MCP](https://img.shields.io/badge/Protocol-MCP-purple)](https://modelcontextprotocol.io)
+[![X402](https://img.shields.io/badge/Payments-X402-green)](https://x402.org)
+
+[🌐 Live Service](https://warpgbm.ai) • [📖 API Docs](https://warpgbm.ai/docs) • [🤖 Agent Guide](https://warpgbm.ai/guide) • [🐍 Python Package](https://github.com/jefferythewind/warpgbm)
+
+</div>
+
+---
+
+## 🎯 What is This?
 
 **Outsource your GBDT workload to the world's fastest GPU implementation.**
 
-WarpGBM MCP is a cloud service that gives AI agents instant access to [WarpGBM's](https://github.com/jefferythewind/warpgbm) GPU-accelerated training. Train models on our A10G GPUs, receive portable artifacts, and cache them for millisecond inference. No GPU required on your end.
+WarpGBM MCP is a **stateless cloud service** that gives AI agents instant access to GPU-accelerated gradient boosting. Built on [WarpGBM](https://github.com/jefferythewind/warpgbm) (91+ ⭐), this service handles training on NVIDIA A10G GPUs while you receive portable model artifacts and benefit from smart 5-minute caching.
 
-### 🏗️ How It Works
+### 🏗️ How It Works (The Smart Cache Workflow)
 
-1. **Train**: POST your data → Train on our A10G GPUs → Get portable model artifact
-2. **Cache**: `artifact_id` cached for 5 minutes → Blazing fast predictions
-3. **Inference**: Online (via cache) or offline (download artifact for local use)
+```mermaid
+graph LR
+    A[Train on GPU] --> B[Get artifact_id + model]
+    B --> C[5min Cache]
+    C --> D[<100ms Predictions]
+    B --> E[Download Artifact]
+    E --> F[Use Anywhere]
+```
 
-**Architecture**: Stateless service. No model storage. You own your artifacts. Use them in production, locally, or via our caching layer for fast online serving.
+1. **Train**: POST your data → Train on A10G GPU → Get `artifact_id` + portable artifact
+2. **Fast Path**: Use `artifact_id` → Sub-100ms cached predictions (5min TTL)
+3. **Slow Path**: Use `model_artifact_joblib` → Download and use anywhere
 
-## 🔗 About the WarpGBM Python Package
+**Architecture**: 🔒 Stateless • 🚀 No model storage • 💾 You own your artifacts
 
-**This MCP service is built on the [WarpGBM Python package](https://github.com/jefferythewind/warpgbm).**
+---
 
-### 🐍 WarpGBM Python Package (Recommended for Production)
+## ⚡ Quick Start
 
-For production ML workflows, use **WarpGBM directly**:
+### For AI Agents (MCP)
 
-- **GitHub**: https://github.com/jefferythewind/warpgbm ⭐ 91+
-- **Installation**: `pip install git+https://github.com/jefferythewind/warpgbm.git`
-- **Agent Guide**: https://github.com/jefferythewind/warpgbm/blob/main/AGENT_GUIDE.md
-- **License**: GPL-3.0
+Add to your MCP settings (e.g., `.cursor/mcp.json`):
 
-### MCP Service vs Python Package
+```json
+{
+  "mcpServers": {
+    "warpgbm": {
+      "url": "https://warpgbm.ai/mcp/sse"
+    }
+  }
+}
+```
 
-| Feature | MCP Service (This Repo) | Python Package |
+### For Developers (REST API)
+
+```bash
+# 1. Train a model
+curl -X POST https://warpgbm.ai/train \
+  -H "Content-Type: application/json" \
+  -d '{
+    "X": [[5.1,3.5,1.4,0.2], [6.7,3.1,4.4,1.4], ...],
+    "y": [0, 1, 2, ...],
+    "model_type": "warpgbm",
+    "objective": "multiclass"
+  }'
+
+# Response includes artifact_id for fast predictions
+# {"artifact_id": "abc-123", "model_artifact_joblib": "H4sIA..."}
+
+# 2. Make fast predictions (cached, <100ms)
+curl -X POST https://warpgbm.ai/predict_from_artifact \
+  -H "Content-Type: application/json" \
+  -d '{
+    "artifact_id": "abc-123",
+    "X": [[5.0,3.4,1.5,0.2]]
+  }'
+```
+
+---
+
+## 🚀 Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 🎯 **Multi-Model** | WarpGBM (GPU) + LightGBM (CPU) |
+| ⚡ **Smart Caching** | `artifact_id` → 5min cache → <100ms inference |
+| 📦 **Portable Artifacts** | Download joblib models, use anywhere |
+| 🤖 **MCP Native** | Direct tool integration for AI agents |
+| 💰 **X402 Payments** | Optional micropayments (Base network) |
+| 🔒 **Stateless** | No data storage, you own your models |
+| 🌐 **Production Ready** | Deployed on Modal with custom domain |
+
+---
+
+## 🐍 Python Package vs MCP Service
+
+**This repo is the MCP service wrapper.** For production ML workflows, consider using the [WarpGBM Python package](https://github.com/jefferythewind/warpgbm) directly:
+
+| Feature | MCP Service (This Repo) | [Python Package](https://github.com/jefferythewind/warpgbm) |
 |---------|------------------------|----------------|
-| **Installation** | None needed | `pip install git+...` |
+| **Installation** | None needed | `pip install git+https://...` |
 | **GPU** | Cloud (pay-per-use) | Your GPU (free) |
 | **Control** | REST API parameters | Full Python API |
-| **Features** | Train, predict, upload | + Cross-validation, feature importance, callbacks |
+| **Features** | Train, predict, upload | + Cross-validation, callbacks, feature importance |
 | **Best For** | Quick experiments, demos | Production pipelines, research |
 | **Cost** | $0.01 per training | Free (your hardware) |
 
@@ -49,180 +117,34 @@ For production ML workflows, use **WarpGBM directly**:
 
 ---
 
-## 🎯 MCP Service Features
+## 📡 Available Endpoints
 
-**Available Models:**
-- 🚀 **[WarpGBM](https://github.com/jefferythewind/warpgbm)** - 13× faster than LightGBM. Custom CUDA kernels. Invariant learning.
-- ⚡ **LightGBM** - Microsoft's distributed gradient boosting. Battle-tested.
+### Core Endpoints
 
-**Key Features:**
-- 🧩 **Multi-Model**: Choose between WarpGBM (GPU) and LightGBM (CPU)
-- 🚀 **Artifact-Based**: Train → Get portable artifact → Use anywhere
-- ⚡ **Smart Caching**: `artifact_id` → 5min TTL → Sub-100ms inference
-- 💰 **Pay-per-use**: X402 micropayment support (optional)
-- 🤖 **MCP Native**: Direct tool integration for AI agents
-- 🔁 **Portable Artifacts**: Download and use locally or in production
-- 🌐 **Stateless**: No model storage. You own your artifacts.
-- 🔌 **Extensible**: Easy to add new model backends
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/models` | List available model backends |
+| `POST` | `/train` | Train model, get artifact_id + model |
+| `POST` | `/predict_from_artifact` | Fast predictions (artifact_id or model) |
+| `POST` | `/predict_proba_from_artifact` | Probability predictions |
+| `POST` | `/upload_data` | Upload CSV/Parquet for training |
+| `POST` | `/feedback` | Submit feedback to improve service |
+| `GET` | `/healthz` | Health check with GPU status |
 
-## 🏗️ Architecture
+### MCP Integration
 
-```
-Client (Agent, Script, Human)
-      │
-      ▼
-HTTPS / JSON (MCP + X402)
-      │
-WarpGBM-MCP FastAPI Service
-      │
-      ├─ GPU Training (CUDA)
-      ├─ CPU Inference
-      └─ Portable Artifacts (joblib/ONNX)
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `SSE` | `/mcp/sse` | MCP Server-Sent Events endpoint |
+| `GET` | `/.well-known/mcp.json` | MCP capability manifest |
+| `GET` | `/.well-known/x402` | X402 pricing manifest |
 
-## 🚀 Quick Start
+---
 
-### Local Development (Ubuntu)
+## 💡 Complete Example: Iris Dataset
 
 ```bash
-# 1. Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Run locally
-uvicorn app.main:app --host 0.0.0.0 --port 4000 --reload
-
-# 4. Test
-curl http://localhost:4000/healthz
-```
-
-### Expose via Tailscale (for team testing)
-
-Your Ubuntu box is already on your company's Tailscale network. Once running:
-
-```bash
-# Find your Tailscale IP
-tailscale ip -4
-
-# Service will be available at:
-# http://<tailscale-ip>:4000
-# or http://<hostname>.tail<tailnet-id>.ts.net:4000
-```
-
-Teammates can access it with zero setup if they're on the same Tailnet.
-
-### Expose via Cloudflare Tunnel (for public testing)
-
-```bash
-# Install cloudflared (if not already)
-brew install cloudflared  # or apt install cloudflared
-
-# Create tunnel
-cloudflared tunnel --url http://localhost:4000
-
-# Outputs: https://random-name.trycloudflare.com
-```
-
-### Deploy to Modal (production)
-
-```bash
-# Install Modal
-pip install modal
-
-# Authenticate
-modal token new
-
-# Deploy
-modal deploy modal_app.py
-
-# The service will be available at https://warpgbm.ai
-```
-
-## 📡 API Endpoints
-
-### List Available Models
-
-```bash
-GET /models
-
-Response:
-{
-  "models": ["warpgbm", "lightgbm"],
-  "default": "warpgbm"
-}
-```
-
-### Training
-
-```bash
-POST /train
-Content-Type: application/json
-
-{
-  "X": [[1.0, 2.0], [3.0, 4.0], ...],
-  "y": [0, 1, 0, ...],
-  "model_type": "warpgbm",  # or "lightgbm"
-  "objective": "multiclass",
-  "num_class": 3,
-  "max_depth": 6,
-  "num_trees": 100,
-  "learning_rate": 0.1
-}
-
-Response:
-{
-  "model_type": "warpgbm",
-  "model_artifact_joblib": "<base64>",
-  "model_artifact_onnx": "<base64>",
-  "training_time_seconds": 1.234
-}
-```
-
-### Inference from Artifact
-
-```bash
-POST /predict_from_artifact
-Content-Type: application/json
-
-{
-  "model_artifact": "<base64-encoded-model>",
-  "X": [[1.0, 2.0], [3.0, 4.0]],
-  "format": "joblib"  # or "onnx"
-}
-
-Response:
-{
-  "predictions": [0, 1]
-}
-```
-
-### Probability Predictions
-
-```bash
-POST /predict_proba_from_artifact
-Content-Type: application/json
-
-{
-  "model_artifact": "<base64-encoded-model>",
-  "X": [[1.0, 2.0]],
-  "format": "joblib"
-}
-
-Response:
-{
-  "probabilities": [[0.1, 0.7, 0.2]]
-}
-```
-
-## 🎯 Complete Example: Iris Dataset
-
-Train a multiclass classifier on Iris dataset (**Note**: Use 60+ samples for proper binning with WarpGBM):
-
-```bash
-# 1. Train WarpGBM model (60 samples - 3× the base 20)
+# 1. Train WarpGBM on Iris (60 samples recommended for proper binning)
 curl -X POST https://warpgbm.ai/train \
   -H "Content-Type: application/json" \
   -d '{
@@ -248,147 +170,252 @@ curl -X POST https://warpgbm.ai/train \
 
 # Response:
 {
-  "artifact_id": "abc123-def456-...",
+  "artifact_id": "abc123-def456-ghi789",
   "model_artifact_joblib": "H4sIA...",
   "training_time_seconds": 0.0
 }
 
-# 2. Fast inference using cached artifact_id (< 100ms)
+# 2. Fast inference with cached artifact_id (<100ms)
 curl -X POST https://warpgbm.ai/predict_from_artifact \
   -H "Content-Type: application/json" \
   -d '{
-  "artifact_id": "abc123-def456-...",
+  "artifact_id": "abc123-def456-ghi789",
   "X": [[5,3.4,1.5,0.2], [6.7,3.1,4.4,1.4], [7.7,3.8,6.7,2.2]]
 }'
 
-# Predictions: [0, 1, 2] ← Perfect classification!
+# Response: {"predictions": [0, 1, 2], "inference_time_seconds": 0.05}
+# Perfect classification! ✨
 ```
 
-**Why 60 samples?** WarpGBM uses quantile binning which needs sufficient data per class. With only 20 samples (~6-7 per class), the model can't learn proper decision boundaries. **Always use 60+ samples for robust training.**
+> **⚠️ Important**: WarpGBM uses quantile binning which requires **60+ samples** for proper training. With fewer samples, the model can't learn proper decision boundaries.
 
-### Health Check
+---
+
+## 🏠 Self-Hosting
+
+### Local Development
 
 ```bash
-GET /healthz
+# Clone repo
+git clone https://github.com/jefferythewind/mcp-warpgbm.git
+cd mcp-warpgbm
 
-Response:
-{
-  "status": "ok",
-  "gpu_available": true,
-  "gpu_name": "NVIDIA A100",
-  "version": "1.0.0"
-}
+# Setup environment
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Run locally (GPU optional for dev)
+uvicorn local_dev:app --host 0.0.0.0 --port 8000 --reload
+
+# Test
+curl http://localhost:8000/healthz
 ```
 
-## 🪙 X402 Payment Flow (Optional)
+### Deploy to Modal (Production)
 
-For monetized deployments:
+```bash
+# Install Modal
+pip install modal
 
-1. Client fetches pricing: `GET /.well-known/x402`
-2. Client pays (on-chain or via gateway)
-3. Client verifies payment: `POST /x402/verify` with tx_hash
-4. Server returns JWT token
-5. Client includes token in subsequent requests: `Authorization: Bearer <token>`
+# Authenticate
+modal token new
 
-## 🔐 Security
+# Deploy
+modal deploy modal_app.py
 
-- ✅ Stateless: no user data persisted
-- ✅ Sandboxed: runs in temporary directories
-- ✅ Size limits: max 50 MB request payload
-- ✅ No code execution: only structured JSON parameters
-- ✅ Read-only filesystem (when deployed to Modal)
-- ✅ Rate limiting: configurable per-IP throttling
+# Service will be live at your Modal URL
+```
+
+### Deploy to Other Platforms
+
+```bash
+# Docker (requires GPU)
+docker build -t warpgbm-mcp .
+docker run --gpus all -p 8000:8000 warpgbm-mcp
+
+# Fly.io, Railway, Render, etc.
+# See their respective GPU deployment docs
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Install dev dependencies
+pip install -r requirements-dev.txt
+
+# Run all tests
+./run_tests.sh
+
+# Or use pytest directly
+pytest tests/ -v
+
+# Test specific functionality
+pytest tests/test_train.py -v
+pytest tests/test_integration.py -v
+```
+
+---
 
 ## 📦 Project Structure
 
 ```
 mcp-warpgmb/
 ├── app/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI app + endpoints
-│   ├── x402.py              # Payment verification
+│   ├── main.py              # FastAPI app + routes
+│   ├── mcp_sse.py           # MCP Server-Sent Events
+│   ├── model_registry.py    # Model backend registry
 │   ├── models.py            # Pydantic schemas
-│   └── utils.py             # Helpers (serialization, etc.)
+│   ├── utils.py             # Serialization, caching
+│   ├── x402.py              # Payment verification
+│   └── feedback_storage.py  # Feedback persistence
 ├── .well-known/
 │   ├── mcp.json             # MCP capability manifest
 │   └── x402                 # X402 pricing manifest
+├── docs/
+│   ├── AGENT_GUIDE.md       # Comprehensive agent docs
+│   ├── MODEL_SUPPORT.md     # Model parameter reference
+│   └── WARPGBM_PYTHON_GUIDE.md
 ├── tests/
 │   ├── test_train.py
 │   ├── test_predict.py
-│   └── test_integration.py
-├── Dockerfile               # Local + cloud container
-├── modal_app.py             # Modal deployment
+│   ├── test_integration.py
+│   └── conftest.py
+├── examples/
+│   ├── simple_train.py
+│   └── compare_models.py
+├── modal_app.py             # Modal deployment config
+├── local_dev.py             # Local dev server
 ├── requirements.txt
-├── requirements-dev.txt
 └── README.md
 ```
 
-## 🧪 Testing
-
-```bash
-# Run tests
-pytest tests/ -v
-
-# Test training locally
-python tests/test_train.py
-
-# Test full workflow
-python tests/test_integration.py
-
-# Compare models
-python examples/compare_models.py
-```
-
-## 📚 Model Documentation
-
-See [docs/MODEL_SUPPORT.md](docs/MODEL_SUPPORT.md) for detailed information on:
-- Available models and their parameters
-- Performance comparisons
-- When to use each model
-- Adding new model backends
-
-## 🌍 Deployment Options
-
-| Environment | Use Case | Command |
-|-------------|----------|---------|
-| **Local** | Development | `uvicorn app.main:app` |
-| **Tailscale** | Team testing | Already accessible at Tailscale IP |
-| **Cloudflare Tunnel** | Public demo | `cloudflared tunnel --url http://localhost:4000` |
-| **Modal** | Production GPU | `modal deploy modal_app.py` |
-| **Docker** | Custom cloud | `docker build -t warpgbm-mcp . && docker run --gpus all -p 4000:4000 warpgbm-mcp` |
+---
 
 ## 💰 Pricing (X402)
 
-| Endpoint | Description | Suggested Price |
-|----------|-------------|-----------------|
-| `/train` | Train model, return artifact | $0.01 |
-| `/predict_from_artifact` | Single inference batch | $0.001 |
-| `/predict_proba_from_artifact` | Probability inference | $0.001 |
+Optional micropayments on Base network:
 
-## 🔮 Roadmap
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `/train` | $0.01 | Train model on GPU, get artifacts |
+| `/predict_from_artifact` | $0.001 | Batch predictions |
+| `/predict_proba_from_artifact` | $0.001 | Probability predictions |
+| `/feedback` | Free | Help us improve! |
 
-- [x] Core training + inference endpoints
-- [x] ONNX export support
-- [x] X402 payment verification
-- [x] Modal deployment config
-- [ ] Async job queue for large datasets
-- [ ] S3/IPFS dataset URL support
-- [ ] Dynamic pricing based on GPU load
-- [ ] Python client library (`WarpGBMClassifierRemote`)
-- [ ] Marketplace listing (Cursor, OpenAI)
-
-## 📚 Learn More
-
-- [WarpGBM GitHub](https://github.com/jefferythewind/warpgbm)
-- [Model Context Protocol](https://modelcontextprotocol.io)
-- [X402 Specification](https://x402.org)
-- [Modal Documentation](https://modal.com/docs)
-
-## 📄 License
-
-GPL-3.0 (same as WarpGBM core)
+> **Note**: Payment is optional for demo/testing. See `/.well-known/x402` for details.
 
 ---
 
-Built with ❤️ for the open agent economy
+## 🔐 Security & Privacy
 
+✅ **Stateless**: No training data or models persisted  
+✅ **Sandboxed**: Runs in temporary isolated directories  
+✅ **Size Limited**: Max 50 MB request payload  
+✅ **No Code Execution**: Only structured JSON parameters  
+✅ **Rate Limited**: Per-IP throttling to prevent abuse  
+✅ **Read-Only FS**: Modal deployment uses immutable filesystem  
+
+---
+
+## 🌍 Available Models
+
+### 🚀 WarpGBM (GPU)
+- **Acceleration**: NVIDIA A10G GPUs
+- **Speed**: 13× faster than LightGBM
+- **Best For**: Time-series, financial modeling, temporal data
+- **Special**: Era-aware splitting, invariant learning
+- **Min Samples**: 60+ recommended
+
+### ⚡ LightGBM (CPU)
+- **Acceleration**: Highly optimized CPU
+- **Speed**: 10-100× faster than sklearn
+- **Best For**: General tabular data, large datasets
+- **Special**: Categorical features, low memory
+- **Min Samples**: 20+
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Core training + inference endpoints
+- [x] Smart artifact caching (5min TTL)
+- [x] MCP Server-Sent Events integration
+- [x] X402 payment verification
+- [x] Modal deployment with GPU
+- [x] Custom domain (warpgbm.ai)
+- [x] Smithery marketplace listing
+- [ ] ONNX export support
+- [ ] Async job queue for large datasets
+- [ ] S3/IPFS dataset URL support
+- [ ] Python client library (`warpgbm-client`)
+- [ ] Additional model backends (XGBoost, CatBoost)
+
+---
+
+## 💬 Feedback & Support
+
+**Help us make this service better for AI agents!**
+
+Submit feedback about:
+- Missing features that would unlock new use cases
+- Confusing documentation or error messages
+- Performance issues or timeout problems
+- Additional model types you'd like to see
+
+```bash
+# Via API
+curl -X POST https://warpgbm.ai/feedback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "feedback_type": "feature_request",
+    "message": "Add support for XGBoost backend",
+    "severity": "medium"
+  }'
+```
+
+Or via:
+- **GitHub Issues**: [mcp-warpgbm/issues](https://github.com/jefferythewind/mcp-warpgbm/issues)
+- **GitHub Discussions**: [warpgbm/discussions](https://github.com/jefferythewind/warpgbm/discussions)
+- **Email**: support@warpgbm.ai
+
+---
+
+## 📚 Learn More
+
+- 🐍 **[WarpGBM Python Package](https://github.com/jefferythewind/warpgbm)** - The core library (91+ ⭐)
+- 🤖 **[Agent Guide](https://warpgbm.ai/guide)** - Complete usage guide for AI agents
+- 📖 **[API Docs](https://warpgbm.ai/docs)** - Interactive OpenAPI documentation
+- 🔌 **[Model Context Protocol](https://modelcontextprotocol.io)** - MCP specification
+- 💰 **[X402 Specification](https://x402.org)** - Payment protocol for agents
+- ☁️ **[Modal Docs](https://modal.com/docs)** - Serverless GPU platform
+
+---
+
+## 📄 License
+
+**GPL-3.0** (same as [WarpGBM core](https://github.com/jefferythewind/warpgbm))
+
+This ensures improvements to the MCP wrapper benefit the community, while allowing commercial use through the cloud service.
+
+---
+
+## 🙏 Credits
+
+Built with:
+- [WarpGBM](https://github.com/jefferythewind/warpgbm) - GPU-accelerated GBDT library
+- [Modal](https://modal.com) - Serverless GPU infrastructure
+- [FastAPI](https://fastapi.tiangolo.com) - Modern Python web framework
+- [LightGBM](https://github.com/microsoft/LightGBM) - Microsoft's GBDT library
+
+---
+
+<div align="center">
+
+**Built with ❤️ for the open agent economy**
+
+[⭐ Star on GitHub](https://github.com/jefferythewind/mcp-warpgbm) • [🚀 Try Live Service](https://warpgbm.ai) • [📖 Read the Docs](https://warpgbm.ai/guide)
+
+</div>
