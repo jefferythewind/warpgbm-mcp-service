@@ -1,7 +1,7 @@
 {
   "name": "warpgbm-mcp",
-  "version": "1.1.0",
-  "description": "Multi-model gradient boosting service supporting WarpGBM (GPU-accelerated with era-aware splitting) and LightGBM. Train models and get portable artifacts for inference.",
+  "version": "1.2.0",
+  "description": "GPU-accelerated gradient boosting service. Train on A10G GPUs, get artifact_id for <100ms cached predictions (5min TTL), or download portable artifacts for production. Supports WarpGBM (GPU) and LightGBM (CPU).",
   "author": "jefferythewind",
   "homepage": "https://github.com/jefferythewind/warpgbm",
   "license": "MIT",
@@ -85,8 +85,11 @@
       },
       "returns": {
         "model_type": "Model backend used",
-        "model_artifact_joblib": "Base64-encoded joblib model (CPU-compatible)",
+        "artifact_id": "Cached artifact ID (valid for 5min, use for fast predictions)",
+        "model_artifact_joblib": "Base64-encoded joblib model (portable, for offline use)",
         "model_artifact_onnx": "Base64-encoded ONNX model (optional)",
+        "num_samples": "Number of training samples",
+        "num_features": "Number of features",
         "training_time_seconds": "Training duration"
       },
       "pricing": {
@@ -96,14 +99,19 @@
       }
     },
     "predict_from_artifact": {
-      "description": "Run inference using a serialized model artifact",
+      "description": "Run inference using a cached artifact_id (fast, <100ms) or model artifact (slower)",
       "endpoint": "/predict_from_artifact",
       "method": "POST",
       "parameters": {
-        "model_artifact": {
+        "artifact_id": {
           "type": "string",
-          "description": "Base64-encoded model artifact (from /train)",
-          "required": true
+          "description": "Cached artifact ID from /train (RECOMMENDED: 5min cache, <100ms inference)",
+          "required": false
+        },
+        "model_artifact_joblib": {
+          "type": "string",
+          "description": "Base64-encoded joblib artifact (from /train, slower: 200-500ms)",
+          "required": false
         },
         "X": {
           "type": "array",
@@ -114,11 +122,13 @@
           "type": "string",
           "enum": ["joblib", "onnx"],
           "default": "joblib",
-          "description": "Model format"
-        }
+          "description": "Model format (only if using model_artifact)"
+        },
+        "note": "Provide EITHER artifact_id (fast) OR model_artifact_joblib (portable)"
       },
       "returns": {
         "predictions": "Array of predictions",
+        "num_samples": "Number of samples predicted",
         "inference_time_seconds": "Inference duration"
       },
       "pricing": {
@@ -128,14 +138,19 @@
       }
     },
     "predict_proba_from_artifact": {
-      "description": "Run probability inference for classification models",
+      "description": "Run probability inference using cached artifact_id (fast) or model artifact",
       "endpoint": "/predict_proba_from_artifact",
       "method": "POST",
       "parameters": {
-        "model_artifact": {
+        "artifact_id": {
           "type": "string",
-          "description": "Base64-encoded model artifact",
-          "required": true
+          "description": "Cached artifact ID from /train (RECOMMENDED: <100ms)",
+          "required": false
+        },
+        "model_artifact_joblib": {
+          "type": "string",
+          "description": "Base64-encoded joblib artifact (slower)",
+          "required": false
         },
         "X": {
           "type": "array",
@@ -145,11 +160,14 @@
         "format": {
           "type": "string",
           "enum": ["joblib", "onnx"],
-          "default": "joblib"
-        }
+          "default": "joblib",
+          "description": "Model format (only if using model_artifact)"
+        },
+        "note": "Provide EITHER artifact_id (fast) OR model_artifact_joblib (portable)"
       },
       "returns": {
         "probabilities": "2D array of class probabilities",
+        "num_samples": "Number of samples predicted",
         "inference_time_seconds": "Inference duration"
       },
       "pricing": {
@@ -197,7 +215,7 @@
       }
     },
     "feedback": {
-      "description": "Submit feedback about the service. Agents can report bugs, request features, or provide general feedback.",
+      "description": "Submit feedback about what would help you most on your ML journey. Tell us about missing features, confusing docs, performance issues, or new model types you'd like to see. Your feedback directly shapes our roadmap!",
       "endpoint": "/feedback",
       "method": "POST",
       "parameters": {

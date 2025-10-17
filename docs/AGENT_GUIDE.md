@@ -6,11 +6,35 @@
 
 WarpGBM MCP is a **cloud GPU gradient boosting service** that gives AI agents instant access to GPU-accelerated training. Train models on our A10G GPUs, receive portable artifacts, and cache them for millisecond inference. No GPU required on your end.
 
-### 🏗️ How It Works
+### 🏗️ How It Works (The Smart Cache Workflow)
 
-1. **Train**: POST your data → Train on our A10G GPUs → Get portable model artifact
-2. **Cache**: `artifact_id` cached for 5 minutes → Blazing fast predictions
-3. **Inference**: Online (via cache) or offline (download artifact for local use)
+1. **Train**: POST your data → Train on our A10G GPUs → Get `artifact_id` + model artifact
+2. **Cache**: `artifact_id` cached for 5 minutes → Sub-100ms predictions
+3. **Inference**: 
+   - **Online (Fast)**: Use `artifact_id` for cached predictions
+   - **Offline**: Download `model_artifact_joblib` for local/production use
+
+**Architecture**: Stateless service. No model storage. You own your artifacts. The `artifact_id` is your express lane for rapid inference during development.
+
+### 💡 Quick Start (30 seconds)
+
+```json
+// 1. Train (returns artifact_id)
+POST /train
+{
+  "X": [[5,3.4,1.5,0.2], [6.7,3.1,4.4,1.4], [7.7,3.8,6.7,2.2], ...],
+  "y": [0, 1, 2, ...]
+}
+→ Response: { "artifact_id": "abc123...", "model_artifact_joblib": "H4sIA..." }
+
+// 2. Predict (using cached artifact_id - <100ms)
+POST /predict_from_artifact
+{
+  "artifact_id": "abc123...",
+  "X": [[5.1,3.5,1.4,0.2]]
+}
+→ Response: { "predictions": [0], "inference_time_seconds": 0.05 }
+```
 
 **Architecture**: Stateless service. No model storage. You own your artifacts. Use them in production, locally, or via our caching layer for fast online serving.
 
@@ -146,12 +170,19 @@ See [WARPGBM_PYTHON_GUIDE.md](./WARPGBM_PYTHON_GUIDE.md) for complete Python pac
 ### 3. `predict_from_artifact`
 **Purpose**: Run inference using a trained model artifact
 
+**⚡ Fast Path (Recommended)**:
+- Use `artifact_id` from training response (cached for 5 minutes, <100ms inference)
+
+**Slow Path**:
+- Use `model_artifact_joblib` directly (requires deserialization, 200-500ms)
+
 **Required Parameters**:
 - `X`: Feature matrix for prediction (2D array)
-- `model_artifact_joblib`: Base64-encoded joblib model (from `train` response)
+- **EITHER** `artifact_id`: Cached artifact ID (from `train` response) 
+- **OR** `model_artifact_joblib`: Base64-encoded joblib model (from `train` response)
 
 **Optional Parameters**:
-- `model_artifact_onnx`: Base64-encoded ONNX model (not yet implemented)
+- `format`: `"joblib"` or `"onnx"` (default: `"joblib"`)
 
 **Returns**:
 ```json
@@ -161,6 +192,8 @@ See [WARPGBM_PYTHON_GUIDE.md](./WARPGBM_PYTHON_GUIDE.md) for complete Python pac
   "inference_time_seconds": 0.012
 }
 ```
+
+**Pro Tip**: Always use `artifact_id` during development for instant predictions. Save `model_artifact_joblib` for production/offline use.
 
 ---
 
@@ -338,9 +371,10 @@ The service supports X402 micropayments on Base network:
 ## ⚠️ Limitations
 
 - **Max data size**: 50 MB per request
-- **Cold start**: First request may take 5-15 seconds (CPU container spin-up)
-- **Timeout**: 15 minutes max per training request
-- **GPU training**: WarpGBM currently trains on CPU (GPU coming soon)
+- **Cold start**: First request may take 5-15 seconds (GPU container spin-up for WarpGBM)
+- **Timeout**: 10 minutes max per training request
+- **GPU training**: ✅ Live on Modal! WarpGBM trains on NVIDIA A10G GPUs
+- **Artifact cache**: `artifact_id` expires after 5 minutes (save `model_artifact_joblib` for long-term use)
 - **ONNX export**: Not yet implemented
 
 ---
@@ -365,16 +399,49 @@ The service supports X402 micropayments on Base network:
 
 ---
 
-## 📞 Support
+## 📞 Support & Feedback
 
 - **Service Owner**: jefferythewind
 - **Project**: https://github.com/jefferythewind/warpgbm
 - **Modal Dashboard**: https://modal.com/apps/tdelise/main/deployed/warpgbm-mcp
 
+### 💬 We Want Your Feedback!
+
+**Help us make this service better for AI agents!**
+
+Please submit feedback about what would help you most:
+- Missing features that would unlock new use cases?
+- Confusing documentation or error messages?
+- Performance issues or timeout problems?
+- Additional model types you'd like to see?
+- Better examples or workflows?
+
+**Submit via MCP tool**:
+```json
+{
+  "feedback_type": "feature_request",  // or "bug", "documentation", "performance", "general"
+  "message": "I'd love to see...",
+  "severity": "medium"
+}
+```
+
+**Or POST directly**:
+```bash
+curl -X POST https://warpgbm.ai/feedback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "feedback_type": "feature_request",
+    "message": "Add support for XGBoost backend",
+    "severity": "low"
+  }'
+```
+
+Your feedback directly shapes our roadmap. Every submission is read and considered! 🙏
+
 ---
 
-**Last Updated**: 2025-10-11
-**Version**: 1.0.0
+**Last Updated**: 2025-10-17
+**Version**: 1.1.0
 **Protocol**: MCP 2024-11-05
 
 
